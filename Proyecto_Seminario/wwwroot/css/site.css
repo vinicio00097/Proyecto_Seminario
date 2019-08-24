@@ -1,0 +1,85 @@
+﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification\ 
+for details on configuring this project to bundle and minify static web assets. */
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+}
+
+.login-sub-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    padding-left: 10px;
+    padding-right: 10px;
+    background-image: linear-gradient(to right top, #f8ff9e, #ffc77c, #ff8f8a, #e66aaf, #8365cb);
+}
+
+.signin-google-button {
+    background-color: white;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    transition: 0.2s;
+    border-radius: 10px;
+    border: none;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.signin-google-button:hover {
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+    border-radius: 10px;
+    border: none;
+    padding: 12px;
+}
+
+.signin-google-button:focus {
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+    outline: none;
+    border-radius: 10px;
+    border: none;
+}
+
+.signin-google-button:active {
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+    outline: none;
+    border-radius: 10px;
+    border: none;
+    padding: 15px;
+}
+.container {
+    padding: 2px 16px;
+}
+
+/*
+
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+
+.carousel-caption p {
+    font-size: 20px;
+    line-height: 1.4;
+}
+
+.carousel-inner .item img[src$=".svg"] {
+    width: 100%;
+}
+
+
+#qrCode {
+    margin: 15px;
+}*/
+
+/* Hide/rearrange for smaller screens */
+@media screen and (max-width: 767px) {
+    /* Hide captions */
+    .carousel-caption {
+        display: none;
+    }
+}
