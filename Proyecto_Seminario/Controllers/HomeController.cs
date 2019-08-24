@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Proyecto_Seminario.Models;
+using Proyecto_Seminario.Services;
 
 namespace Proyecto_Seminario.Controllers
 {
@@ -15,32 +16,13 @@ namespace Proyecto_Seminario.Controllers
 
         public async Task<IActionResult> Index()
         {
-            if (Request.Cookies["session_token"] != null)
+            if (Request.Cookies["oauth_session_token"] != null && Request.Cookies["session_token"] != null)
             {
-                try
+                if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
                 {
-                    GoogleJsonWebSignature.Payload payload = await GoogleJsonWebSignature.ValidateAsync(Request.Cookies["session_token"]);
-
-                    if (payload.ExpirationTimeSeconds > DateTimeOffset.Now.ToUnixTimeSeconds())
-                    {
-                        Usuarios usuario = db.Usuarios.Where(item => item.UsuarioEmail == payload.Email).FirstOrDefault();
-
-                        if (usuario != null)
-                        {
-                            return View();
-                            
-                        }
-                        else
-                        {
-                            return RedirectToAction("Index", "Authentication");
-                        }
-                    }
-                    else
-                    {
-                        return RedirectToAction("Index", "Authentication");
-                    }
+                    return View();
                 }
-                catch (InvalidJwtException exc)
+                else
                 {
                     return RedirectToAction("Index", "Authentication");
                 }
@@ -51,29 +33,5 @@ namespace Proyecto_Seminario.Controllers
             }
         }
 
-        public IActionResult About()
-        {
-            ViewData["Message"] = "Your application description page.";
-
-            return View();
-        }
-
-        public IActionResult Contact()
-        {
-            ViewData["Message"] = "Your contact page.";
-
-            return View();
-        }
-
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
     }
 }

@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using Proyecto_Seminario.Models;
 using Google.Apis.Auth;
 using Google.Apis.Auth.OAuth2;
+using Proyecto_Seminario.Services;
 
 namespace Proyecto_Seminario.Controllers
 {
@@ -27,30 +28,13 @@ namespace Proyecto_Seminario.Controllers
         // GET: Authentication
         public async Task<ActionResult> Index()
         {
-            if (Request.Cookies["session_token"] != null)
+            if (Request.Cookies["oauth_session_token"] != null&&Request.Cookies["session_token"]!=null)
             {
-                try
+                if(await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
                 {
-                    GoogleJsonWebSignature.Payload payload = await GoogleJsonWebSignature.ValidateAsync(Request.Cookies["session_token"]);
-
-                    if(payload.ExpirationTimeSeconds> DateTimeOffset.Now.ToUnixTimeSeconds())
-                    {
-                        Usuarios usuario=db.Usuarios.Where(item => item.UsuarioEmail == payload.Email).FirstOrDefault();
-
-                        if (usuario != null)
-                        {
-                            return RedirectToAction("Index", "Home");
-                        }
-                        else
-                        {
-                            return View();
-                        }
-                    }else
-                    {
-                        return View();
-                    }
+                    return RedirectToAction("Index", "Home");
                 }
-                catch(InvalidJwtException exc)
+                else
                 {
                     return View();
                 }
@@ -86,17 +70,24 @@ namespace Proyecto_Seminario.Controllers
             };
             var req = new HttpRequestMessage(HttpMethod.Post, requestUrl) { Content = new FormUrlEncodedContent(dict) };
             var response = await httpClient.SendAsync(req);
-            Debug.WriteLine(await response.Content.ReadAsStringAsync());
             var token = JsonConvert.DeserializeObject<GmailToken>(await response.Content.ReadAsStringAsync());
-            Response.Cookies.Append("session_token", token.IdToken);
             await GetuserProfile(token.AccessToken);
 
             GoogleJsonWebSignature.Payload payload = await GoogleJsonWebSignature.ValidateAsync(token.IdToken);
+                  
 
-            Usuarios usuario = db.Usuarios.Where(item => item.UsuarioEmail == payload.Email).FirstOrDefault();
+            var usuario = db.Usuarios.Where(item => item.UsuarioEmail == payload.Email).Select(user => new
+            {
+                user.IdUsuario,
+                user.UsuarioEmail,
+                Rango = user.RangoNavigation.Nivel
+            }).FirstOrDefault();
 
             if (usuario != null)
             {
+                Response.Cookies.Append("oauth_session_token", token.IdToken);
+                Response.Cookies.Append("session_token", TokenManager.GenerateToken(payload.Email, usuario.Rango.ToString()));
+
                 return RedirectToAction("Index", "Home");
             }
             else
