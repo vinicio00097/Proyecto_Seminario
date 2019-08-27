@@ -24,13 +24,22 @@ namespace Proyecto_Seminario.Controllers
                 }
                 else
                 {
+                    TokenManager.removeCookies(Response);
                     return RedirectToAction("Index", "Authentication");
                 }
             }
             else
             {
+                TokenManager.removeCookies(Response);
                 return RedirectToAction("Index", "Authentication");
             }
+        }
+
+        public IActionResult Log_out()
+        {
+            TokenManager.removeCookies(Response);
+
+            return Ok();
         }
 
     }

@@ -36,17 +36,19 @@ namespace Proyecto_Seminario.Controllers
                 }
                 else
                 {
+                    TokenManager.removeCookies(Response);
                     return View();
                 }
             }
             else
             {
+                TokenManager.removeCookies(Response);
                 return View();
             }
         }
 
         public void Google_Oauth_Signin()
-        {  
+        {
             Response.Redirect($"https://accounts.google.com/o/oauth2/v2/auth?client_id={googleCredentials.Google_ClientID}&response_type=code&scope=openid%20email%20profile&redirect_uri={googleCredentials.Google_RedirectURL}&state=abcdef");
         }
 
@@ -86,7 +88,7 @@ namespace Proyecto_Seminario.Controllers
             if (usuario != null)
             {
                 Response.Cookies.Append("oauth_session_token", token.IdToken);
-                Response.Cookies.Append("session_token", TokenManager.GenerateToken(payload.Email, usuario.Rango.ToString()));
+                Response.Cookies.Append("session_token", TokenManager.GenerateToken(usuario.IdUsuario.ToString(),payload.Email, usuario.Rango.ToString()));
 
                 return RedirectToAction("Index", "Home");
             }

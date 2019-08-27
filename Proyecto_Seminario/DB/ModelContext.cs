@@ -34,7 +34,7 @@ namespace Proyecto_Seminario
             if (!optionsBuilder.IsConfigured)
             {
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseOracle("User Id=c##proyecto_seminario;Password=hola;Data Source=localhost:1521;");
+                optionsBuilder.UseOracle("User Id=c##proyecto_seminario;Password=hola;Data Source=localhost:1521/xe;");
             }
         }
 
@@ -81,9 +81,19 @@ namespace Proyecto_Seminario
                     .HasColumnType("NUMBER(38)")
                     .ValueGeneratedOnAdd();
 
+                entity.Property(e => e.Descripcion)
+                    .IsRequired()
+                    .HasColumnName("DESCRIPCION")
+                    .HasColumnType("VARCHAR2(100)");
+
                 entity.Property(e => e.Estado)
                     .IsRequired()
                     .HasColumnName("ESTADO")
+                    .HasColumnType("CHAR(1)");
+
+                entity.Property(e => e.Iniciada)
+                    .IsRequired()
+                    .HasColumnName("INICIADA")
                     .HasColumnType("CHAR(1)");
 
                 entity.Property(e => e.Nombre)
@@ -166,6 +176,10 @@ namespace Proyecto_Seminario
                     .HasColumnName("PASO")
                     .HasColumnType("NUMBER(38)");
 
+                entity.Property(e => e.UsuarioAccion)
+                    .HasColumnName("USUARIO_ACCION")
+                    .HasColumnType("NUMBER(38)");
+
                 entity.HasOne(d => d.EstadoNavigation)
                     .WithMany(p => p.InstanciasplantillasPasosDetalle)
                     .HasForeignKey(d => d.Estado)
@@ -181,6 +195,11 @@ namespace Proyecto_Seminario
                     .HasForeignKey(d => d.Paso)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("INSTANCIASPLANTILLAS_PASOS_DETALLE_FK1");
+
+                entity.HasOne(d => d.UsuarioAccionNavigation)
+                    .WithMany(p => p.InstanciasplantillasPasosDetalle)
+                    .HasForeignKey(d => d.UsuarioAccion)
+                    .HasConstraintName("INSTANCIASPLANTILLAS_PASOS_DETALLE_FK4");
             });
 
             modelBuilder.Entity<Pasos>(entity =>

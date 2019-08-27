@@ -1,4 +1,5 @@
 ﻿using Google.Apis.Auth;
+using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,7 @@ namespace Proyecto_Seminario.Services
         private static string Secret = "a1hYx1UKfKAYm6Lfdv4c2MJTusmuOclabGXpKflgommW5VCgV14k1abym2yONZD26hxozdZdANv4UyDodBipcxDxcs7kSYFz8r0wsXhEyCeNVFbFBBsWPDopdIuPoG7G";
 
 
-        public static string GenerateToken(string user,string user_level)
+        public static string GenerateToken(string id_user,string user,string user_level)
         {
             byte[] key = Convert.FromBase64String(Secret);
             SymmetricSecurityKey securityKey = new SymmetricSecurityKey(key);
@@ -23,10 +24,11 @@ namespace Proyecto_Seminario.Services
             {
                 Subject = new ClaimsIdentity(new[] 
                 {
-                      new Claim("user_email", user),
-                      new Claim("user_level", user_level),
+                    new Claim("user_id", id_user),
+                    new Claim("user_email", user),
+                    new Claim("user_level", user_level),
                 }),
-                Expires = DateTime.UtcNow.AddMinutes(30),
+                Expires = DateTime.UtcNow.AddMinutes(60),
                 SigningCredentials = new SigningCredentials(securityKey,
                 SecurityAlgorithms.HmacSha256Signature)
             };
@@ -120,6 +122,14 @@ namespace Proyecto_Seminario.Services
                 return null;
             }
             return identity;
+        }
+
+        public static bool removeCookies(HttpResponse response)
+        {
+            response.Cookies.Delete("oauth_session_token");
+            response.Cookies.Delete("session_token");
+
+            return true;
         }
     }
 
