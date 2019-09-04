@@ -12,6 +12,8 @@ using Proyecto_Seminario.Models;
 using Proyecto_Seminario.Services;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Cors;
+using System.Diagnostics;
+using Newtonsoft.Json;
 
 namespace Proyecto_Seminario.Controllers
 {
@@ -41,12 +43,19 @@ namespace Proyecto_Seminario.Controllers
                         }).OrderBy(item2=>item2.IdPlantillaCampo),
                         PlantillasPasosDetalle = item.PlantillasPasosDetalle.Select(paso => new
                         {
-                            paso.PasoNavigation.IdPaso,
-                            paso.PasoNavigation.Nombre,
-                            paso.PasoNavigation.Descripcion
+                            paso.IdPlantillaPaso,
+                            paso.Plantilla,
+                            paso.Paso,
+                            PasoNavigation=new
+                            {
+                                paso.PasoNavigation.IdPaso,
+                                paso.PasoNavigation.Nombre,
+                                paso.PasoNavigation.Descripcion
+                            },
                         })
                     });
 
+                    Debug.WriteLine(JsonConvert.SerializeObject(plantillas));
                     return Ok(new JsonMessage(
                         "success",
                         "11",

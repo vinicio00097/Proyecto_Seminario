@@ -129,7 +129,6 @@ namespace Proyecto_Seminario
                     .ValueGeneratedOnAdd();
 
                 entity.Property(e => e.Dato)
-                    .IsRequired()
                     .HasColumnName("DATO")
                     .HasColumnType("VARCHAR2(50)");
 
