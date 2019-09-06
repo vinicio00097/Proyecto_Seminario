@@ -17,7 +17,8 @@ body {
 }
 
 .signin-google-button {
-    background-color: white;
+    color:white;
+    background-color: #303030;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
     transition: 0.2s;
     border-radius: 10px;
@@ -29,12 +30,14 @@ body {
     justify-content: space-around;
 }
 
-.signin-google-button:hover {
-    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
-    border-radius: 10px;
-    border: none;
-    padding: 12px;
-}
+    .signin-google-button:hover {
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+        border-radius: 10px;
+        border: none;
+        -ms-transform: scale(1.1,1.1); /* IE 9 */
+        -webkit-transform: scale(1.1,1.1); /* Safari prior 9.0 */
+        transform: scale(1.1,1.1);
+    }
 
 .signin-google-button:focus {
     box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
@@ -43,13 +46,16 @@ body {
     border: none;
 }
 
-.signin-google-button:active {
-    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
-    outline: none;
-    border-radius: 10px;
-    border: none;
-    padding: 15px;
-}
+    .signin-google-button:active {
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+        outline: none;
+        border-radius: 10px;
+        border: none;
+        padding: 10px;
+        -ms-transform: scale(1.1,1.1); /* IE 9 */
+        -webkit-transform: scale(1.1,1.1); /* Safari prior 9.0 */
+        transform: scale(1.15,1.15);
+    }
 .container {
     padding: 2px 16px;
 }

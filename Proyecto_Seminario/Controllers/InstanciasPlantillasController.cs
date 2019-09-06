@@ -23,7 +23,9 @@ namespace Proyecto_Seminario.Controllers
             {
                 if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
                 {
-                    var plantillas = modelContext.Instanciasplantillas.Select(item => new
+                    string Id_Usuario = TokenManager.getClaims(Request.Cookies["session_token"]).FindFirst("user_id").Value;
+
+                    var plantillas = modelContext.Instanciasplantillas.Where(plantilla=>plantilla.Usuario.ToString()==Id_Usuario).Select(item => new
                     {
                         item.IdInstanciaPlantilla,
                         item.Nombre,
@@ -44,7 +46,7 @@ namespace Proyecto_Seminario.Controllers
                             campoDato.Dato
                         }).OrderBy(item2 => item2.IdInstanciaPlantillaDato),
                         InstanciasplantillasPasosDetalle = item.InstanciasplantillasPasosDetalle.Select(paso => new
-                        {
+                        {                        
                             paso.PasoNavigation.IdPasoinstancia,
                             paso.IdPlantillaPasoDetalle,
                             paso.PasoNavigation.Nombre,
