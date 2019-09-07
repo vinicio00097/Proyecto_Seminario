@@ -15,6 +15,8 @@ namespace Proyecto_Seminario
         public decimal? Estado { get; set; }
         public decimal IdPlantillaPasoDetalle { get; set; }
         public decimal? UsuarioAccion { get; set; }
+        public DateTime? FechaInicio { get; set; }
+        public DateTime? FechaFin { get; set; }
 
         public virtual Acciones EstadoNavigation { get; set; }
         public virtual Instanciasplantillas InstanciaPlantillaNavigation { get; set; }

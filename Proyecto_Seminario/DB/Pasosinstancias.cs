@@ -14,6 +14,7 @@ namespace Proyecto_Seminario
         public string Nombre { get; set; }
         public string Descripcion { get; set; }
         public decimal IdPasoinstancia { get; set; }
+        
 
         public virtual ICollection<InstanciasplantillasPasosDetalle> InstanciasplantillasPasosDetalle { get; set; }
         public virtual ICollection<PasosinstanciasDatosDetalle> PasosinstanciasDatosDetalle { get; set; }

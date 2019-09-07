@@ -39,7 +39,12 @@ namespace Proyecto_Seminario.Controllers
                         {
                             campo.IdPlantillaCampo,
                             campo.Plantilla,
-                            campo.NombreCampo
+                            campo.NombreCampo,
+                            TipoDatoNavigation = new
+                            {
+                                campo.TipoDatoNavigation.IdTipoDato,
+                                campo.TipoDatoNavigation.Nombre
+                            }
                         }).OrderBy(item2=>item2.IdPlantillaCampo),
                         PlantillasPasosDetalle = item.PlantillasPasosDetalle.Select(paso => new
                         {

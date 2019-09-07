@@ -27,6 +27,7 @@ namespace Proyecto_Seminario
         public virtual DbSet<PlantillasCamposDetalle> PlantillasCamposDetalle { get; set; }
         public virtual DbSet<PlantillasPasosDetalle> PlantillasPasosDetalle { get; set; }
         public virtual DbSet<Rangos> Rangos { get; set; }
+        public virtual DbSet<TiposDatos> TiposDatos { get; set; }
         public virtual DbSet<Usuarios> Usuarios { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -128,8 +129,16 @@ namespace Proyecto_Seminario
                     .HasColumnType("NUMBER(38)")
                     .ValueGeneratedOnAdd();
 
-                entity.Property(e => e.Dato)
-                    .HasColumnName("DATO")
+                entity.Property(e => e.DatoDate)
+                    .HasColumnName("DATO_DATE")
+                    .HasColumnType("DATE");
+
+                entity.Property(e => e.DatoInteger)
+                    .HasColumnName("DATO_INTEGER")
+                    .HasColumnType("NUMBER(38)");
+
+                entity.Property(e => e.DatoString)
+                    .HasColumnName("DATO_STRING")
                     .HasColumnType("VARCHAR2(50)");
 
                 entity.Property(e => e.Instanciaplantilla)
@@ -141,10 +150,20 @@ namespace Proyecto_Seminario
                     .HasColumnName("NOMBRE_CAMPO")
                     .HasColumnType("VARCHAR2(50)");
 
+                entity.Property(e => e.TipoDato)
+                    .HasColumnName("TIPO_DATO")
+                    .HasColumnType("NUMBER(38)");
+
                 entity.HasOne(d => d.InstanciaplantillaNavigation)
                     .WithMany(p => p.InstanciasplantillasDatosDetalle)
                     .HasForeignKey(d => d.Instanciaplantilla)
                     .HasConstraintName("INSTANCIASPLANTILLAS_DATOS_DETALLE_FK1");
+
+                entity.HasOne(d => d.TipoDatoNavigation)
+                    .WithMany(p => p.InstanciasplantillasDatosDetalle)
+                    .HasForeignKey(d => d.TipoDato)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("INSTANCIASPLANTILLAS_DATOS_DETALLE_FK2");
             });
 
             modelBuilder.Entity<InstanciasplantillasPasosDetalle>(entity =>
@@ -166,6 +185,14 @@ namespace Proyecto_Seminario
                 entity.Property(e => e.Estado)
                     .HasColumnName("ESTADO")
                     .HasColumnType("NUMBER(38)");
+
+                entity.Property(e => e.FechaFin)
+                    .HasColumnName("FECHA_FIN")
+                    .HasColumnType("DATE");
+
+                entity.Property(e => e.FechaInicio)
+                    .HasColumnName("FECHA_INICIO")
+                    .HasColumnType("DATE");
 
                 entity.Property(e => e.InstanciaPlantilla)
                     .HasColumnName("INSTANCIA_PLANTILLA")
@@ -383,10 +410,20 @@ namespace Proyecto_Seminario
                     .HasColumnName("NOMBRE_CAMPO")
                     .HasColumnType("VARCHAR2(50)");
 
+                entity.Property(e => e.TipoDato)
+                    .HasColumnName("TIPO_DATO")
+                    .HasColumnType("NUMBER(38)");
+
                 entity.HasOne(d => d.PlantillaNavigation)
                     .WithMany(p => p.PlantillasCamposDetalle)
                     .HasForeignKey(d => d.Plantilla)
                     .HasConstraintName("PLANTILLAS_CAMPOS_DETALLE_FK1");
+
+                entity.HasOne(d => d.TipoDatoNavigation)
+                    .WithMany(p => p.PlantillasCamposDetalle)
+                    .HasForeignKey(d => d.TipoDato)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("PLANTILLAS_CAMPOS_DETALLE_FK2");
             });
 
             modelBuilder.Entity<PlantillasPasosDetalle>(entity =>
@@ -443,6 +480,28 @@ namespace Proyecto_Seminario
                 entity.Property(e => e.Nivel)
                     .HasColumnName("NIVEL")
                     .HasColumnType("NUMBER(38)");
+
+                entity.Property(e => e.Nombre)
+                    .IsRequired()
+                    .HasColumnName("NOMBRE")
+                    .HasColumnType("VARCHAR2(50)");
+            });
+
+            modelBuilder.Entity<TiposDatos>(entity =>
+            {
+                entity.HasKey(e => e.IdTipoDato)
+                    .HasName("TABLE1_PK");
+
+                entity.ToTable("TIPOS_DATOS");
+
+                entity.HasIndex(e => e.IdTipoDato)
+                    .HasName("TABLE1_PK")
+                    .IsUnique();
+
+                entity.Property(e => e.IdTipoDato)
+                    .HasColumnName("ID_TIPO_DATO")
+                    .HasColumnType("NUMBER(38)")
+                    .ValueGeneratedOnAdd();
 
                 entity.Property(e => e.Nombre)
                     .IsRequired()
@@ -513,6 +572,8 @@ namespace Proyecto_Seminario
             modelBuilder.HasSequence("ISEQ$$_75378");
 
             modelBuilder.HasSequence("ISEQ$$_75379");
+
+            modelBuilder.HasSequence("ISEQ$$_76748");
         }
     }
 }
