@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Proyecto_Seminario.Models;
+using Proyecto_Seminario.Models.ModifiedModel;
 using Proyecto_Seminario.Services;
 
 namespace Proyecto_Seminario.Controllers
@@ -59,6 +60,8 @@ namespace Proyecto_Seminario.Controllers
                             paso.IdPlantillaPasoDetalle,
                             paso.PasoNavigation.Nombre,
                             paso.PasoNavigation.Descripcion,
+                            paso.FechaInicio,
+                            paso.FechaFin,
                             UsuarioAccion = modelContext.Usuarios.Where(user => user.IdUsuario == paso.UsuarioAccion).Select(user => new
                             {
                                 user.IdUsuario,
@@ -70,7 +73,7 @@ namespace Proyecto_Seminario.Controllers
                                 accion.IdAccion,
                                 accion.Nombre
                             }).FirstOrDefault(),
-                            Datos = paso.PasoNavigation.PasosinstanciasDatosDetalle.Select(pasos_datos => new
+                            Datos_Pasos = paso.PasoNavigation.PasosinstanciasDatosDetalle.Select(pasos_datos => new
                             {
                                 pasos_datos.InstanciaPlantillaDatoNavigation.IdInstanciaPlantillaDato,
                                 pasos_datos.InstanciaPlantillaDatoNavigation.Instanciaplantilla,
@@ -195,7 +198,7 @@ namespace Proyecto_Seminario.Controllers
 
         // POST: InstanciasPlantillas/Edit/5
         [HttpPut("Edit/{id}")]
-        public async Task<ActionResult> Edit(int id,[FromBody] List<InstanciaPaso> pasosInicializados)
+        public async Task<ActionResult> Edit(int id,[FromBody] InstanciaPlantilla instanciaPlantilla)
         {
             try
             {
@@ -203,13 +206,68 @@ namespace Proyecto_Seminario.Controllers
                 {
                     if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
                     {
-                        Debug.WriteLine(JsonConvert.SerializeObject(pasosInicializados));
+                        Instanciasplantillas instanciaplantilla = modelContext.Instanciasplantillas.Where(instancia => instancia.IdInstanciaPlantilla == id).FirstOrDefault();
+
+                        foreach(Dato dato in instanciaPlantilla.Datos)
+                        {
+                            InstanciasplantillasDatosDetalle toUpdate = modelContext.
+                                InstanciasplantillasDatosDetalle.
+                                Where(datoDB => datoDB.IdInstanciaPlantillaDato == dato.IdInstanciaPlantillaDato).
+                                FirstOrDefault();
+
+                            toUpdate.DatoString = dato.DatoString;
+                            toUpdate.DatoInteger = dato.DatoInteger;
+                            toUpdate.DatoDate = dato.DatoDate;
+
+                            modelContext.Entry(toUpdate).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                            await modelContext.SaveChangesAsync();
+                        }
+
+                        foreach(InstanciaPaso paso in instanciaPlantilla.Pasos)
+                        {
+                            InstanciasplantillasPasosDetalle instanciasplantillasPasosDetalle =
+                                modelContext.InstanciasplantillasPasosDetalle.Where(pasoDetalle => pasoDetalle.IdPlantillaPasoDetalle == paso.IdPlantillaPasoDetalle).
+                                FirstOrDefault();
+                            instanciasplantillasPasosDetalle.FechaInicio = paso.Fecha_Inicio;
+                            instanciasplantillasPasosDetalle.FechaFin = paso.Fecha_Fin;
+
+                            modelContext.Entry(instanciasplantillasPasosDetalle).State =
+                                Microsoft.EntityFrameworkCore.EntityState.Modified;
+                            await modelContext.SaveChangesAsync();
+
+                            foreach(Dato dato in paso.Datos_Pasos)
+                            {
+                                PasosinstanciasDatosDetalle pasosinstanciasDatosDetalle = new PasosinstanciasDatosDetalle();
+                                pasosinstanciasDatosDetalle.InstanciaPlantillaDato = dato.IdInstanciaPlantillaDato;
+                                pasosinstanciasDatosDetalle.Paso = paso.IdPasoInstancia;
+                                pasosinstanciasDatosDetalle.SoloLectura = dato.SoloLectura == "true" ? "1" : "0";
+
+                                await modelContext.PasosinstanciasDatosDetalle.AddAsync(pasosinstanciasDatosDetalle);
+                                await modelContext.SaveChangesAsync();
+                            }
+
+                            foreach(Usuarios usuario in paso.Usuarios)
+                            {
+                                PasosUsuariosDetalle pasosUsuariosDetalle = new PasosUsuariosDetalle();
+                                pasosUsuariosDetalle.PlantillaPasoDetalle = paso.IdPlantillaPasoDetalle;
+                                pasosUsuariosDetalle.Usuario = usuario.IdUsuario;
+
+                                await modelContext.PasosUsuariosDetalle.AddAsync(pasosUsuariosDetalle);
+                                await modelContext.SaveChangesAsync();
+                            }
+
+                            Debug.WriteLine(JsonConvert.SerializeObject(paso));
+                        }
+
+                        instanciaplantilla.Iniciada = "1";
+                        modelContext.Entry(instanciaplantilla).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                        await modelContext.SaveChangesAsync();
 
                         return Ok(new JsonMessage(
-                            "success",
-                            "23",
-                            pasosInicializados,
-                            "Proceso iniciado."));
+                        "success",
+                        "23",
+                        instanciaplantilla,
+                        "Proceso iniciado."));
                     }
                     else
                     {
