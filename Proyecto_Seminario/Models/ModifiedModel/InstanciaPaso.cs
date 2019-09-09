@@ -12,8 +12,8 @@ namespace Proyecto_Seminario.Models
         public int IdPlantillaPasoDetalle { get; set; }
         public string Nombre { get; set; }
         public string Descripcion { get; set; }
-        public DateTime Fecha_Inicio { get; set; }
-        public DateTime Fecha_Fin { get; set; }
+        public DateTime? FechaInicio { get; set; }
+        public DateTime? FechaFin { get; set; }
         public List<Dato> Datos_Pasos { get; set; }
         public List<Usuarios> Usuarios { get; set; }
     }

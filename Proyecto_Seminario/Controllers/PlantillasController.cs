@@ -89,20 +89,88 @@ namespace Proyecto_Seminario.Controllers
             
         }
 
-       /* [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([FromBody]Plantillas)
+        [HttpPost("Create")]
+        public async Task<IActionResult> Create([FromBody]Plantillas plantilla)
         {
-            if (ModelState.IsValid)
+            if (Request.Cookies["oauth_session_token"] != null && Request.Cookies["session_token"] != null)
             {
-                modelContext.Add(plantillas);
-                await modelContext.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
+                {
+                    Debug.WriteLine(JsonConvert.SerializeObject(plantilla));
+
+                    Plantillas newPlantilla = new Plantillas();
+                    newPlantilla.Nombre = plantilla.Nombre;
+                    newPlantilla.Descripcion = plantilla.Descripcion;
+
+                    await modelContext.Plantillas.AddAsync(newPlantilla);
+                    await modelContext.SaveChangesAsync();
+
+                    for(int indexCampo = 0; indexCampo < plantilla.PlantillasCamposDetalle.Count; indexCampo++)
+                    {
+                        plantilla.PlantillasCamposDetalle.ElementAt(indexCampo).IdPlantillaCampo = indexCampo+1;
+                        plantilla.PlantillasCamposDetalle.ElementAt(indexCampo).Plantilla = newPlantilla.IdPlantilla;
+
+                        await modelContext.PlantillasCamposDetalle.AddAsync(plantilla.PlantillasCamposDetalle.ElementAt(indexCampo));
+                        await modelContext.SaveChangesAsync();
+
+                        plantilla.PlantillasCamposDetalle.ElementAt(indexCampo).TipoDatoNavigation =
+                            modelContext.TiposDatos.Where(tipo => tipo.IdTipoDato ==
+                            plantilla.PlantillasCamposDetalle.ElementAt(indexCampo).TipoDato).FirstOrDefault();
+                        newPlantilla.PlantillasCamposDetalle.Add(plantilla.PlantillasCamposDetalle.ElementAt(indexCampo));
+                    }
+
+                    for (int indexPaso = 0; indexPaso < plantilla.PlantillasPasosDetalle.Count; indexPaso++)
+                    {
+                        Pasos paso = new Pasos
+                        {
+                            Nombre = plantilla.PlantillasPasosDetalle.ElementAt(indexPaso).PasoNavigation.Nombre,
+                            Descripcion = plantilla.PlantillasPasosDetalle.ElementAt(indexPaso).PasoNavigation.Descripcion
+                        };
+
+                        await modelContext.Pasos.AddAsync(paso);
+                        await modelContext.SaveChangesAsync();
+
+                        PlantillasPasosDetalle newPlantillasPasosDetalle = new PlantillasPasosDetalle
+                        {
+                            IdPlantillaPaso = indexPaso + 1,
+                            Plantilla = newPlantilla.IdPlantilla,
+                            Paso = paso.IdPaso
+                        };
+
+                        await modelContext.PlantillasPasosDetalle.AddAsync(newPlantillasPasosDetalle);
+                        await modelContext.SaveChangesAsync();
+
+                        newPlantilla.PlantillasPasosDetalle.Add(newPlantillasPasosDetalle);
+                    }
+
+                    return Ok(new JsonMessage(
+                        "success",
+                        "12",
+                        newPlantilla,
+                        "Plantilla agregada."));
+                }
+                else
+                {
+                    TokenManager.removeCookies(Response);
+                    return NotFound(new JsonMessage(
+                     "fail",
+                     "0",
+                     null,
+                     "Acceso no autorizado."));
+                }
             }
-            return View(plantillas);
+            else
+            {
+                TokenManager.removeCookies(Response);
+                return NotFound(new JsonMessage(
+                 "fail",
+                 "0",
+                 null,
+                 "Acceso no autorizado."));
+            }
         }
 
-        // GET: Plantillas/Edit/5
+       /* // GET: Plantillas/Edit/5
         public async Task<IActionResult> Edit(decimal? id)
         {
             if (id == null)

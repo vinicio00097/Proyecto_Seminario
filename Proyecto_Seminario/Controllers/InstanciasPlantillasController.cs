@@ -208,7 +208,8 @@ namespace Proyecto_Seminario.Controllers
                     {
                         Instanciasplantillas instanciaplantilla = modelContext.Instanciasplantillas.Where(instancia => instancia.IdInstanciaPlantilla == id).FirstOrDefault();
 
-                        foreach(Dato dato in instanciaPlantilla.Datos)
+                        Debug.WriteLine(JsonConvert.SerializeObject( instanciaPlantilla));
+                        /*foreach(Dato dato in instanciaPlantilla.Datos)
                         {
                             InstanciasplantillasDatosDetalle toUpdate = modelContext.
                                 InstanciasplantillasDatosDetalle.
@@ -261,7 +262,7 @@ namespace Proyecto_Seminario.Controllers
 
                         instanciaplantilla.Iniciada = "1";
                         modelContext.Entry(instanciaplantilla).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-                        await modelContext.SaveChangesAsync();
+                        await modelContext.SaveChangesAsync();*/
 
                         return Ok(new JsonMessage(
                         "success",
