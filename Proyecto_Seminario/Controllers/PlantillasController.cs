@@ -92,62 +92,74 @@ namespace Proyecto_Seminario.Controllers
         [HttpPost("Create")]
         public async Task<IActionResult> Create([FromBody]Plantillas plantilla)
         {
-            if (Request.Cookies["oauth_session_token"] != null && Request.Cookies["session_token"] != null)
+            try
             {
-                if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
+                if (Request.Cookies["oauth_session_token"] != null && Request.Cookies["session_token"] != null)
                 {
-                    Debug.WriteLine(JsonConvert.SerializeObject(plantilla));
-
-                    Plantillas newPlantilla = new Plantillas();
-                    newPlantilla.Nombre = plantilla.Nombre;
-                    newPlantilla.Descripcion = plantilla.Descripcion;
-
-                    await modelContext.Plantillas.AddAsync(newPlantilla);
-                    await modelContext.SaveChangesAsync();
-
-                    for(int indexCampo = 0; indexCampo < plantilla.PlantillasCamposDetalle.Count; indexCampo++)
+                    if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
                     {
-                        plantilla.PlantillasCamposDetalle.ElementAt(indexCampo).IdPlantillaCampo = indexCampo+1;
-                        plantilla.PlantillasCamposDetalle.ElementAt(indexCampo).Plantilla = newPlantilla.IdPlantilla;
+                        Debug.WriteLine(JsonConvert.SerializeObject(plantilla));
 
-                        await modelContext.PlantillasCamposDetalle.AddAsync(plantilla.PlantillasCamposDetalle.ElementAt(indexCampo));
+                        Plantillas newPlantilla = new Plantillas();
+                        newPlantilla.Nombre = plantilla.Nombre;
+                        newPlantilla.Descripcion = plantilla.Descripcion;
+
+                        await modelContext.Plantillas.AddAsync(newPlantilla);
                         await modelContext.SaveChangesAsync();
 
-                        plantilla.PlantillasCamposDetalle.ElementAt(indexCampo).TipoDatoNavigation =
-                            modelContext.TiposDatos.Where(tipo => tipo.IdTipoDato ==
-                            plantilla.PlantillasCamposDetalle.ElementAt(indexCampo).TipoDato).FirstOrDefault();
-                        newPlantilla.PlantillasCamposDetalle.Add(plantilla.PlantillasCamposDetalle.ElementAt(indexCampo));
-                    }
+                        for (int indexCampo = 0; indexCampo < plantilla.PlantillasCamposDetalle.Count; indexCampo++)
+                        {
+                            plantilla.PlantillasCamposDetalle.ElementAt(indexCampo).IdPlantillaCampo = indexCampo + 1;
+                            plantilla.PlantillasCamposDetalle.ElementAt(indexCampo).Plantilla = newPlantilla.IdPlantilla;
 
-                    for (int indexPaso = 0; indexPaso < plantilla.PlantillasPasosDetalle.Count; indexPaso++)
+                            await modelContext.PlantillasCamposDetalle.AddAsync(plantilla.PlantillasCamposDetalle.ElementAt(indexCampo));
+                            await modelContext.SaveChangesAsync();
+
+                            plantilla.PlantillasCamposDetalle.ElementAt(indexCampo).TipoDatoNavigation =
+                                modelContext.TiposDatos.Where(tipo => tipo.IdTipoDato ==
+                                plantilla.PlantillasCamposDetalle.ElementAt(indexCampo).TipoDato).FirstOrDefault();
+                            newPlantilla.PlantillasCamposDetalle.Add(plantilla.PlantillasCamposDetalle.ElementAt(indexCampo));
+                        }
+
+                        for (int indexPaso = 0; indexPaso < plantilla.PlantillasPasosDetalle.Count; indexPaso++)
+                        {
+                            Pasos paso = new Pasos
+                            {
+                                Nombre = plantilla.PlantillasPasosDetalle.ElementAt(indexPaso).PasoNavigation.Nombre,
+                                Descripcion = plantilla.PlantillasPasosDetalle.ElementAt(indexPaso).PasoNavigation.Descripcion
+                            };
+
+                            await modelContext.Pasos.AddAsync(paso);
+                            await modelContext.SaveChangesAsync();
+
+                            PlantillasPasosDetalle newPlantillasPasosDetalle = new PlantillasPasosDetalle
+                            {
+                                IdPlantillaPaso = indexPaso + 1,
+                                Plantilla = newPlantilla.IdPlantilla,
+                                Paso = paso.IdPaso
+                            };
+
+                            await modelContext.PlantillasPasosDetalle.AddAsync(newPlantillasPasosDetalle);
+                            await modelContext.SaveChangesAsync();
+
+                            newPlantilla.PlantillasPasosDetalle.Add(newPlantillasPasosDetalle);
+                        }
+
+                        return Ok(new JsonMessage(
+                            "success",
+                            "12",
+                            newPlantilla,
+                            "Plantilla agregada."));
+                    }
+                    else
                     {
-                        Pasos paso = new Pasos
-                        {
-                            Nombre = plantilla.PlantillasPasosDetalle.ElementAt(indexPaso).PasoNavigation.Nombre,
-                            Descripcion = plantilla.PlantillasPasosDetalle.ElementAt(indexPaso).PasoNavigation.Descripcion
-                        };
-
-                        await modelContext.Pasos.AddAsync(paso);
-                        await modelContext.SaveChangesAsync();
-
-                        PlantillasPasosDetalle newPlantillasPasosDetalle = new PlantillasPasosDetalle
-                        {
-                            IdPlantillaPaso = indexPaso + 1,
-                            Plantilla = newPlantilla.IdPlantilla,
-                            Paso = paso.IdPaso
-                        };
-
-                        await modelContext.PlantillasPasosDetalle.AddAsync(newPlantillasPasosDetalle);
-                        await modelContext.SaveChangesAsync();
-
-                        newPlantilla.PlantillasPasosDetalle.Add(newPlantillasPasosDetalle);
+                        TokenManager.removeCookies(Response);
+                        return NotFound(new JsonMessage(
+                         "fail",
+                         "0",
+                         null,
+                         "Acceso no autorizado."));
                     }
-
-                    return Ok(new JsonMessage(
-                        "success",
-                        "12",
-                        newPlantilla,
-                        "Plantilla agregada."));
                 }
                 else
                 {
@@ -159,15 +171,15 @@ namespace Proyecto_Seminario.Controllers
                      "Acceso no autorizado."));
                 }
             }
-            else
+            catch(Exception exc)
             {
-                TokenManager.removeCookies(Response);
                 return NotFound(new JsonMessage(
-                 "fail",
-                 "0",
-                 null,
-                 "Acceso no autorizado."));
+                "fail",
+                "15",
+                null,
+                "Ha ocurrido un error. Contacte a soporte.Error: " + exc));
             }
+            
         }
 
        /* // GET: Plantillas/Edit/5
@@ -293,22 +305,68 @@ namespace Proyecto_Seminario.Controllers
             }
 
             return View(plantillas);
-        }
+        }*/
 
-        // POST: Plantillas/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
+        //POST: Plantillas/Delete/5
+        [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> DeleteConfirmed(decimal id)
         {
-            var plantillas = await _context.Plantillas.FindAsync(id);
-            _context.Plantillas.Remove(plantillas);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                if (Request.Cookies["oauth_session_token"] != null && Request.Cookies["session_token"] != null)
+                {
+                    if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
+                    {
+                        Plantillas plantilla = modelContext.Plantillas.Where(item => item.IdPlantilla == id).FirstOrDefault();
+
+                        if (plantilla == null)
+                        {
+                            return NotFound(new JsonMessage(
+                            "fail",
+                            "10",
+                            null,
+                            "La plantilla ya ha sido eliminada."));
+                        }
+
+                        modelContext.Plantillas.Remove(plantilla);
+                        await modelContext.SaveChangesAsync();
+
+                        return Ok(new JsonMessage(
+                            "success",
+                            "19",
+                            plantilla,
+                            "Plantilla eliminada."));
+                    }
+                    else
+                    {
+                        TokenManager.removeCookies(Response);
+                        return NotFound(new JsonMessage(
+                         "fail",
+                         "0",
+                         null,
+                         "Acceso no autorizado."));
+                    }
+                }
+                else
+                {
+                    TokenManager.removeCookies(Response);
+                    return NotFound(new JsonMessage(
+                     "fail",
+                     "0",
+                     null,
+                     "Acceso no autorizado."));
+                }
+            }
+            catch(Exception exc)
+            {
+                return NotFound(new JsonMessage(
+                "fail",
+                "15",
+                null,
+                "Ha ocurrido un error. Contacte a soporte.Error: "+exc));
+            }
         }
 
-        private bool PlantillasExists(decimal id)
-        {
-            return _context.Plantillas.Any(e => e.IdPlantilla == id);
-        }*/
+
     }
 }

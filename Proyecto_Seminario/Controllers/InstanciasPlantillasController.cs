@@ -124,62 +124,70 @@ namespace Proyecto_Seminario.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Plantillas plantilla)
         {
-            if (Request.Cookies["oauth_session_token"] != null && Request.Cookies["session_token"] != null)
+            try
             {
-                if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
+                if (Request.Cookies["oauth_session_token"] != null && Request.Cookies["session_token"] != null)
                 {
-                    var data = plantilla;
-                    Instanciasplantillas newInstanciasplantilla = new Instanciasplantillas();
-                    newInstanciasplantilla.Nombre = plantilla.Nombre;
-                    newInstanciasplantilla.Descripcion = plantilla.Descripcion;
-                    newInstanciasplantilla.Usuario = int.Parse( TokenManager.getClaims(Request.Cookies["session_token"]).FindFirst("user_id").Value);
-                    newInstanciasplantilla.Iniciada = "0";
-                    newInstanciasplantilla.Estado = "0";
-                    newInstanciasplantilla.UsuarioNavigation = modelContext.Usuarios.Where(user=>user.IdUsuario==newInstanciasplantilla.Usuario).FirstOrDefault();
-
-                    await modelContext.Instanciasplantillas.AddAsync(newInstanciasplantilla);
-                    await modelContext.SaveChangesAsync();
-
-                    foreach (PlantillasPasosDetalle item in plantilla.PlantillasPasosDetalle)
+                    if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
                     {
-                        Pasosinstancias newPasoInstancia = new Pasosinstancias
-                        {
-                            Nombre = item.PasoNavigation.Nombre,
-                            Descripcion = item.PasoNavigation.Descripcion,
-                        };
-                        await modelContext.Pasosinstancias.AddAsync(newPasoInstancia);
+                        var data = plantilla;
+                        Instanciasplantillas newInstanciasplantilla = new Instanciasplantillas();
+                        newInstanciasplantilla.Nombre = plantilla.Nombre;
+                        newInstanciasplantilla.Descripcion = plantilla.Descripcion;
+                        newInstanciasplantilla.Usuario = int.Parse(TokenManager.getClaims(Request.Cookies["session_token"]).FindFirst("user_id").Value);
+                        newInstanciasplantilla.Iniciada = "0";
+                        newInstanciasplantilla.Estado = "0";
+                        newInstanciasplantilla.UsuarioNavigation = modelContext.Usuarios.Where(user => user.IdUsuario == newInstanciasplantilla.Usuario).FirstOrDefault();
+
+                        await modelContext.Instanciasplantillas.AddAsync(newInstanciasplantilla);
                         await modelContext.SaveChangesAsync();
 
-
-                        InstanciasplantillasPasosDetalle newInstanciasplantillasPasosDetalle = new InstanciasplantillasPasosDetalle
+                        foreach (PlantillasPasosDetalle item in plantilla.PlantillasPasosDetalle)
                         {
-                            InstanciaPlantilla = newInstanciasplantilla.IdInstanciaPlantilla,
-                            Paso = newPasoInstancia.IdPasoinstancia,
-                        };
-                        await modelContext.InstanciasplantillasPasosDetalle.AddAsync(newInstanciasplantillasPasosDetalle);
-                        await modelContext.SaveChangesAsync();
+                            Pasosinstancias newPasoInstancia = new Pasosinstancias
+                            {
+                                Nombre = item.PasoNavigation.Nombre,
+                                Descripcion = item.PasoNavigation.Descripcion,
+                            };
+                            await modelContext.Pasosinstancias.AddAsync(newPasoInstancia);
+                            await modelContext.SaveChangesAsync();
 
-                        newInstanciasplantillasPasosDetalle.PasoNavigation = newPasoInstancia;
-                        newInstanciasplantilla.InstanciasplantillasPasosDetalle.Add(newInstanciasplantillasPasosDetalle);
+
+                            InstanciasplantillasPasosDetalle newInstanciasplantillasPasosDetalle = new InstanciasplantillasPasosDetalle
+                            {
+                                InstanciaPlantilla = newInstanciasplantilla.IdInstanciaPlantilla,
+                                Paso = newPasoInstancia.IdPasoinstancia,
+                            };
+                            await modelContext.InstanciasplantillasPasosDetalle.AddAsync(newInstanciasplantillasPasosDetalle);
+                            await modelContext.SaveChangesAsync();
+
+                            newInstanciasplantillasPasosDetalle.PasoNavigation = newPasoInstancia;
+                            newInstanciasplantilla.InstanciasplantillasPasosDetalle.Add(newInstanciasplantillasPasosDetalle);
+                        }
+
+                        foreach (PlantillasCamposDetalle item in plantilla.PlantillasCamposDetalle)
+                        {
+                            InstanciasplantillasDatosDetalle newInstanciasplantillasDatosDetalle = new InstanciasplantillasDatosDetalle();
+                            newInstanciasplantillasDatosDetalle.Instanciaplantilla = newInstanciasplantilla.IdInstanciaPlantilla;
+                            newInstanciasplantillasDatosDetalle.TipoDato = item.TipoDatoNavigation.IdTipoDato;
+                            newInstanciasplantillasDatosDetalle.NombreCampo = item.NombreCampo;
+
+                            await modelContext.InstanciasplantillasDatosDetalle.AddAsync(newInstanciasplantillasDatosDetalle);
+                            await modelContext.SaveChangesAsync();
+                        }
+
+                        return Ok(new JsonMessage(
+                            "success",
+                            "22",
+                            newInstanciasplantilla,
+                            "Proceso agregado."
+                        ));
                     }
-
-                    foreach (PlantillasCamposDetalle item in plantilla.PlantillasCamposDetalle)
+                    else
                     {
-                        InstanciasplantillasDatosDetalle newInstanciasplantillasDatosDetalle = new InstanciasplantillasDatosDetalle();
-                        newInstanciasplantillasDatosDetalle.Instanciaplantilla = newInstanciasplantilla.IdInstanciaPlantilla;
-                        newInstanciasplantillasDatosDetalle.TipoDato = item.TipoDatoNavigation.IdTipoDato;
-                        newInstanciasplantillasDatosDetalle.NombreCampo = item.NombreCampo;
-
-                        await modelContext.InstanciasplantillasDatosDetalle.AddAsync(newInstanciasplantillasDatosDetalle);
-                        await modelContext.SaveChangesAsync();
+                        TokenManager.removeCookies(Response);
+                        return RedirectToAction("Index", "Authentication");
                     }
-
-                    return Ok(new JsonMessage(
-                        "success",
-                        "22",
-                        newInstanciasplantilla,
-                        "Instancia de plantilla agregada."
-                    ));
                 }
                 else
                 {
@@ -187,12 +195,14 @@ namespace Proyecto_Seminario.Controllers
                     return RedirectToAction("Index", "Authentication");
                 }
             }
-            else
+            catch(Exception exc)
             {
-                TokenManager.removeCookies(Response);
-                return RedirectToAction("Index", "Authentication");
+                return NotFound(new JsonMessage(
+                 "fail",
+                 "25",
+                 null,
+                 "Ha ocurrido un error. Contacte a soporte. Error: " + exc));
             }
-            
         }
 
 
@@ -207,6 +217,15 @@ namespace Proyecto_Seminario.Controllers
                     if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
                     {
                         Instanciasplantillas instanciaplantilla = modelContext.Instanciasplantillas.Where(instancia => instancia.IdInstanciaPlantilla == id).FirstOrDefault();
+
+                        if (instanciaplantilla == null)
+                        {
+                            return NotFound(new JsonMessage(
+                             "fail",
+                             "20",
+                             null,
+                             "El proceso no se puede iniciar porque ha sido eliminado."));
+                        }
 
                         Debug.WriteLine(JsonConvert.SerializeObject( instanciaPlantilla));
                         /*foreach(Dato dato in instanciaPlantilla.Datos)
@@ -290,32 +309,73 @@ namespace Proyecto_Seminario.Controllers
                      "Acceso no autorizado."));
                 }
             }
-            catch(Exception e)
+            catch(Exception exc)
             {
-                Debug.WriteLine(e);
-
                 return NotFound(new JsonMessage(
                  "fail",
-                 "0",
+                 "25",
                  null,
-                 "Acceso no autorizado."));
+                 "Ha ocurrido un error. Contacte a soporte. Error: "+exc));
             }
         }
 
-        // POST: InstanciasPlantillas/Delete/5
-        [HttpDelete]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        // DELETE: InstanciasPlantillas/Delete/5
+        [HttpDelete("Delete/{id}")]
+        public async Task<ActionResult> Delete(int id)
         {
             try
             {
-                // TODO: Add delete logic here
+                if (Request.Cookies["oauth_session_token"] != null && Request.Cookies["session_token"] != null)
+                {
+                    if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
+                    {
+                        Instanciasplantillas instanciaplantilla = modelContext.Instanciasplantillas.Where(instancia => instancia.IdInstanciaPlantilla == id).FirstOrDefault();
 
-                return RedirectToAction(nameof(Index));
+                        if (instanciaplantilla == null)
+                        {
+                            return NotFound(new JsonMessage(
+                            "fail",
+                            "20",
+                            null,
+                            "El proceso ya ha sido eliminado."));
+                        }
+
+                        modelContext.Instanciasplantillas.Remove(instanciaplantilla);
+                        await modelContext.SaveChangesAsync();
+
+                        return Ok(new JsonMessage(
+                        "success",
+                        "29",
+                        instanciaplantilla,
+                        "Proceso eliminado."));
+                    }
+                    else
+                    {
+                        TokenManager.removeCookies(Response);
+                        return NotFound(new JsonMessage(
+                         "fail",
+                         "0",
+                         null,
+                         "Acceso no autorizado."));
+                    }
+                }
+                else
+                {
+                    TokenManager.removeCookies(Response);
+                    return NotFound(new JsonMessage(
+                     "fail",
+                     "0",
+                     null,
+                     "Acceso no autorizado."));
+                }
             }
-            catch
+            catch(Exception exc)
             {
-                return View();
+                return NotFound(new JsonMessage(
+                "fail",
+                "25",
+                null,
+                "Ha ocurrido un error inesperado. Contacte a soporte. Error: "+exc));
             }
         }
     }

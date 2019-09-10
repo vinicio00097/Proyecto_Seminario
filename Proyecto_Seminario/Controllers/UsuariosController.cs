@@ -91,15 +91,19 @@ namespace Proyecto_Seminario.Controllers
                      "Acceso no autorizado."));
                 }
             }
-            catch
+            catch(Exception exc)
             {
-                return View();
+                return NotFound(new JsonMessage(
+                 "fail",
+                 "35",
+                 null,
+                 "Ha ocurrido un error. Contacte a soporte.Error: " + exc));
             }
         }
 
         // POST: Usuarios/Edit
-        [HttpPut("Edit")]
-        public async Task<ActionResult> Edit([FromBody] Usuarios usuario)
+        [HttpPut("Edit/{id}")]
+        public async Task<ActionResult> Edit(decimal id,[FromBody] Usuarios usuario)
         {
             try
             {
@@ -107,6 +111,17 @@ namespace Proyecto_Seminario.Controllers
                 {
                     if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
                     {
+                        Usuarios verifyUser = modelContext.Usuarios.Where(user => user.IdUsuario == id).FirstOrDefault();
+
+                        if (verifyUser == null)
+                        {
+                            return NotFound(new JsonMessage(
+                             "fail",
+                             "30",
+                             null,
+                             "No se actualizó porque el usuario ya ha sido eliminado."));
+                        }
+
                         modelContext.Entry(usuario).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
                         await modelContext.SaveChangesAsync();
 
@@ -136,9 +151,13 @@ namespace Proyecto_Seminario.Controllers
                      "Acceso no autorizado."));
                 }
             }
-            catch
+            catch(Exception exc)
             {
-                return View();
+                return NotFound(new JsonMessage(
+                 "fail",
+                 "35",
+                 null,
+                 "Ha ocurrido un error. Contacte a soporte.Error: " + exc));
             }
         }
 
@@ -154,7 +173,15 @@ namespace Proyecto_Seminario.Controllers
                     {
                         Usuarios usuario=modelContext.Usuarios.Where(user=>user.IdUsuario==id).FirstOrDefault();
 
-                        Debug.WriteLine("putaaaa");
+                        if (usuario == null)
+                        {
+                            return NotFound(new JsonMessage(
+                             "fail",
+                             "30",
+                             null,
+                             "El usuario ya ha sido eliminado."));
+                        }
+
                         modelContext.Usuarios.Remove(usuario);
                         await modelContext.SaveChangesAsync();
 
@@ -184,9 +211,13 @@ namespace Proyecto_Seminario.Controllers
                      "Acceso no autorizado."));
                 }
             }
-            catch
+            catch(Exception exc)
             {
-                return View();
+                return NotFound(new JsonMessage(
+                 "fail",
+                 "35",
+                 null,
+                 "Ha ocurrido un error. Contacte a soporte.Error: " + exc));
             }
         }
     }
