@@ -20,9 +20,11 @@ namespace Proyecto_Seminario
         public virtual DbSet<InstanciasplantillasDatosDetalle> InstanciasplantillasDatosDetalle { get; set; }
         public virtual DbSet<InstanciasplantillasPasosDetalle> InstanciasplantillasPasosDetalle { get; set; }
         public virtual DbSet<Pasos> Pasos { get; set; }
+        public virtual DbSet<PasosDatosDetalle> PasosDatosDetalle { get; set; }
         public virtual DbSet<PasosUsuariosDetalle> PasosUsuariosDetalle { get; set; }
         public virtual DbSet<Pasosinstancias> Pasosinstancias { get; set; }
         public virtual DbSet<PasosinstanciasDatosDetalle> PasosinstanciasDatosDetalle { get; set; }
+        public virtual DbSet<PasosinstanciasUsuariosDetalle> PasosinstanciasUsuariosDetalle { get; set; }
         public virtual DbSet<Plantillas> Plantillas { get; set; }
         public virtual DbSet<PlantillasCamposDetalle> PlantillasCamposDetalle { get; set; }
         public virtual DbSet<PlantillasPasosDetalle> PlantillasPasosDetalle { get; set; }
@@ -255,19 +257,60 @@ namespace Proyecto_Seminario
                     .HasColumnType("VARCHAR2(50)");
             });
 
+            modelBuilder.Entity<PasosDatosDetalle>(entity =>
+            {
+                entity.HasKey(e => e.IdPasoDato)
+                    .HasName("PASOS_DATOS_DETALLE_PK");
+
+                entity.ToTable("PASOS_DATOS_DETALLE");
+
+                entity.HasIndex(e => e.IdPasoDato)
+                    .HasName("PASOS_DATOS_DETALLE_PK")
+                    .IsUnique();
+
+                entity.Property(e => e.IdPasoDato)
+                    .HasColumnName("ID_PASO_DATO")
+                    .HasColumnType("NUMBER(38)")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.Paso)
+                    .HasColumnName("PASO")
+                    .HasColumnType("NUMBER(38)");
+
+                entity.Property(e => e.PlantillaCampo)
+                    .HasColumnName("PLANTILLA_CAMPO")
+                    .HasColumnType("NUMBER(38)");
+
+                entity.Property(e => e.SoloLectura)
+                    .IsRequired()
+                    .HasColumnName("SOLO_LECTURA")
+                    .HasColumnType("CHAR(1)");
+
+                entity.HasOne(d => d.PasoNavigation)
+                    .WithMany(p => p.PasosDatosDetalle)
+                    .HasForeignKey(d => d.Paso)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("PASOS_DATOS_DETALLE_FK1");
+
+                entity.HasOne(d => d.PlantillaCampoNavigation)
+                    .WithMany(p => p.PasosDatosDetalle)
+                    .HasForeignKey(d => d.PlantillaCampo)
+                    .HasConstraintName("PASOS_DATOS_DETALLE_FK2");
+            });
+
             modelBuilder.Entity<PasosUsuariosDetalle>(entity =>
             {
-                entity.HasKey(e => e.IdPasosUsuarios)
-                    .HasName("PASOS_USUARIOS_DETALLE_PK");
+                entity.HasKey(e => e.IdPasoUsuario)
+                    .HasName("PLANTILLAS_PASOS_USUARIOS_DETALLE_PK2");
 
                 entity.ToTable("PASOS_USUARIOS_DETALLE");
 
-                entity.HasIndex(e => e.IdPasosUsuarios)
-                    .HasName("PASOS_USUARIOS_DETALLE_PK")
+                entity.HasIndex(e => e.IdPasoUsuario)
+                    .HasName("PASOS_USUARIOS_DETALLE_PK2")
                     .IsUnique();
 
-                entity.Property(e => e.IdPasosUsuarios)
-                    .HasColumnName("ID_PASOS_USUARIOS")
+                entity.Property(e => e.IdPasoUsuario)
+                    .HasColumnName("ID_PASO_USUARIO")
                     .HasColumnType("NUMBER(38)")
                     .ValueGeneratedOnAdd();
 
@@ -282,13 +325,13 @@ namespace Proyecto_Seminario
                 entity.HasOne(d => d.PlantillaPasoDetalleNavigation)
                     .WithMany(p => p.PasosUsuariosDetalle)
                     .HasForeignKey(d => d.PlantillaPasoDetalle)
-                    .HasConstraintName("PASOS_USUARIOS_DETALLE_FK1");
+                    .HasConstraintName("PLANTILLAS_PASOS_USUARIOS_DETALLE_FK1");
 
                 entity.HasOne(d => d.UsuarioNavigation)
                     .WithMany(p => p.PasosUsuariosDetalle)
                     .HasForeignKey(d => d.Usuario)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("PASOS_USUARIOS_DETALLE_FK2");
+                    .HasConstraintName("PLANTILLAS_PASOS_USUARIOS_DETALLE_FK2");
             });
 
             modelBuilder.Entity<Pasosinstancias>(entity =>
@@ -359,6 +402,42 @@ namespace Proyecto_Seminario
                     .HasConstraintName("PASOSINSTANCIAS_DATOS_DETALLE_FK2");
             });
 
+            modelBuilder.Entity<PasosinstanciasUsuariosDetalle>(entity =>
+            {
+                entity.HasKey(e => e.IdPasosUsuarios)
+                    .HasName("PASOS_USUARIOS_DETALLE_PK");
+
+                entity.ToTable("PASOSINSTANCIAS_USUARIOS_DETALLE");
+
+                entity.HasIndex(e => e.IdPasosUsuarios)
+                    .HasName("PASOS_USUARIOS_DETALLE_PK")
+                    .IsUnique();
+
+                entity.Property(e => e.IdPasosUsuarios)
+                    .HasColumnName("ID_PASOS_USUARIOS")
+                    .HasColumnType("NUMBER(38)")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.PlantillaPasoDetalle)
+                    .HasColumnName("PLANTILLA_PASO_DETALLE")
+                    .HasColumnType("NUMBER(38)");
+
+                entity.Property(e => e.Usuario)
+                    .HasColumnName("USUARIO")
+                    .HasColumnType("NUMBER(38)");
+
+                entity.HasOne(d => d.PlantillaPasoDetalleNavigation)
+                    .WithMany(p => p.PasosinstanciasUsuariosDetalle)
+                    .HasForeignKey(d => d.PlantillaPasoDetalle)
+                    .HasConstraintName("PASOS_USUARIOS_DETALLE_FK1");
+
+                entity.HasOne(d => d.UsuarioNavigation)
+                    .WithMany(p => p.PasosinstanciasUsuariosDetalle)
+                    .HasForeignKey(d => d.Usuario)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("PASOS_USUARIOS_DETALLE_FK2");
+            });
+
             modelBuilder.Entity<Plantillas>(entity =>
             {
                 entity.HasKey(e => e.IdPlantilla)
@@ -388,27 +467,28 @@ namespace Proyecto_Seminario
 
             modelBuilder.Entity<PlantillasCamposDetalle>(entity =>
             {
-                entity.HasKey(e => new { e.Plantilla, e.IdPlantillaCampo })
+                entity.HasKey(e => e.IdPlantillaCampo)
                     .HasName("PLANTILLAS_CAMPOS_DETALLE_PK");
 
                 entity.ToTable("PLANTILLAS_CAMPOS_DETALLE");
 
-                entity.HasIndex(e => new { e.IdPlantillaCampo, e.Plantilla })
+                entity.HasIndex(e => e.IdPlantillaCampo)
                     .HasName("PLANTILLAS_CAMPOS_DETALLE_PK")
                     .IsUnique();
 
-                entity.Property(e => e.Plantilla)
-                    .HasColumnName("PLANTILLA")
-                    .HasColumnType("NUMBER(38)");
-
                 entity.Property(e => e.IdPlantillaCampo)
                     .HasColumnName("ID_PLANTILLA_CAMPO")
-                    .HasColumnType("NUMBER(38)");
+                    .HasColumnType("NUMBER(38)")
+                    .ValueGeneratedOnAdd();
 
                 entity.Property(e => e.NombreCampo)
                     .IsRequired()
                     .HasColumnName("NOMBRE_CAMPO")
                     .HasColumnType("VARCHAR2(50)");
+
+                entity.Property(e => e.Plantilla)
+                    .HasColumnName("PLANTILLA")
+                    .HasColumnType("NUMBER(38)");
 
                 entity.Property(e => e.TipoDato)
                     .HasColumnName("TIPO_DATO")
@@ -428,25 +508,26 @@ namespace Proyecto_Seminario
 
             modelBuilder.Entity<PlantillasPasosDetalle>(entity =>
             {
-                entity.HasKey(e => new { e.Plantilla, e.IdPlantillaPaso })
+                entity.HasKey(e => e.IdPlantillaPaso)
                     .HasName("PLANTILLAS_PASOS_DETALLE_PK");
 
                 entity.ToTable("PLANTILLAS_PASOS_DETALLE");
 
-                entity.HasIndex(e => new { e.IdPlantillaPaso, e.Plantilla })
+                entity.HasIndex(e => e.IdPlantillaPaso)
                     .HasName("PLANTILLAS_PASOS_DETALLE_PK")
                     .IsUnique();
 
-                entity.Property(e => e.Plantilla)
-                    .HasColumnName("PLANTILLA")
-                    .HasColumnType("NUMBER(38)");
-
                 entity.Property(e => e.IdPlantillaPaso)
                     .HasColumnName("ID_PLANTILLA_PASO")
-                    .HasColumnType("NUMBER(38)");
+                    .HasColumnType("NUMBER(38)")
+                    .ValueGeneratedOnAdd();
 
                 entity.Property(e => e.Paso)
                     .HasColumnName("PASO")
+                    .HasColumnType("NUMBER(38)");
+
+                entity.Property(e => e.Plantilla)
+                    .HasColumnName("PLANTILLA")
                     .HasColumnType("NUMBER(38)");
 
                 entity.HasOne(d => d.PasoNavigation)
@@ -557,7 +638,11 @@ namespace Proyecto_Seminario
 
             modelBuilder.HasSequence("ISEQ$$_75354");
 
+            modelBuilder.HasSequence("ISEQ$$_75357");
+
             modelBuilder.HasSequence("ISEQ$$_75360");
+
+            modelBuilder.HasSequence("ISEQ$$_75363");
 
             modelBuilder.HasSequence("ISEQ$$_75366");
 
@@ -574,6 +659,10 @@ namespace Proyecto_Seminario
             modelBuilder.HasSequence("ISEQ$$_75379");
 
             modelBuilder.HasSequence("ISEQ$$_76748");
+
+            modelBuilder.HasSequence("ISEQ$$_77306");
+
+            modelBuilder.HasSequence("ISEQ$$_77317");
         }
     }
 }

@@ -7,6 +7,7 @@ namespace Proyecto_Seminario
     {
         public Pasos()
         {
+            PasosDatosDetalle = new HashSet<PasosDatosDetalle>();
             PlantillasPasosDetalle = new HashSet<PlantillasPasosDetalle>();
         }
 
@@ -14,6 +15,7 @@ namespace Proyecto_Seminario
         public string Nombre { get; set; }
         public string Descripcion { get; set; }
 
+        public virtual ICollection<PasosDatosDetalle> PasosDatosDetalle { get; set; }
         public virtual ICollection<PlantillasPasosDetalle> PlantillasPasosDetalle { get; set; }
     }
 }

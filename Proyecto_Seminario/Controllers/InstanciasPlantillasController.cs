@@ -83,7 +83,7 @@ namespace Proyecto_Seminario.Controllers
                                 pasos_datos.InstanciaPlantillaDatoNavigation.DatoInteger,
                                 pasos_datos.InstanciaPlantillaDatoNavigation.DatoDate,
                             }),
-                            Usuarios = paso.PasosUsuariosDetalle.Select(pasos_usuarios => new
+                            Usuarios = paso.PasosinstanciasUsuariosDetalle.Select(pasos_usuarios => new
                             {
                                 pasos_usuarios.IdPasosUsuarios,
                                 pasos_usuarios.UsuarioNavigation.IdUsuario,

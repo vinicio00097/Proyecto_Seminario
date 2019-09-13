@@ -10,6 +10,7 @@ namespace Proyecto_Seminario
             Instanciasplantillas = new HashSet<Instanciasplantillas>();
             InstanciasplantillasPasosDetalle = new HashSet<InstanciasplantillasPasosDetalle>();
             PasosUsuariosDetalle = new HashSet<PasosUsuariosDetalle>();
+            PasosinstanciasUsuariosDetalle = new HashSet<PasosinstanciasUsuariosDetalle>();
         }
 
         public decimal IdUsuario { get; set; }
@@ -22,5 +23,6 @@ namespace Proyecto_Seminario
         public virtual ICollection<Instanciasplantillas> Instanciasplantillas { get; set; }
         public virtual ICollection<InstanciasplantillasPasosDetalle> InstanciasplantillasPasosDetalle { get; set; }
         public virtual ICollection<PasosUsuariosDetalle> PasosUsuariosDetalle { get; set; }
+        public virtual ICollection<PasosinstanciasUsuariosDetalle> PasosinstanciasUsuariosDetalle { get; set; }
     }
 }

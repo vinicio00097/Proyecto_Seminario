@@ -7,7 +7,7 @@ namespace Proyecto_Seminario
     {
         public InstanciasplantillasPasosDetalle()
         {
-            PasosUsuariosDetalle = new HashSet<PasosUsuariosDetalle>();
+            PasosinstanciasUsuariosDetalle = new HashSet<PasosinstanciasUsuariosDetalle>();
         }
 
         public decimal InstanciaPlantilla { get; set; }
@@ -22,6 +22,6 @@ namespace Proyecto_Seminario
         public virtual Instanciasplantillas InstanciaPlantillaNavigation { get; set; }
         public virtual Pasosinstancias PasoNavigation { get; set; }
         public virtual Usuarios UsuarioAccionNavigation { get; set; }
-        public virtual ICollection<PasosUsuariosDetalle> PasosUsuariosDetalle { get; set; }
+        public virtual ICollection<PasosinstanciasUsuariosDetalle> PasosinstanciasUsuariosDetalle { get; set; }
     }
 }
