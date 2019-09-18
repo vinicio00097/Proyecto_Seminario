@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Proyecto_Seminario.Models;
 using Proyecto_Seminario.Models.ModifiedModel;
+using Proyecto_Seminario.Models.ModifiedModel.Plantillas;
 using Proyecto_Seminario.Services;
 
 namespace Proyecto_Seminario.Controllers
@@ -122,7 +123,7 @@ namespace Proyecto_Seminario.Controllers
 
         // POST: InstanciasPlantillas/Create
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Plantillas plantilla)
+        public async Task<IActionResult> Create([FromBody] Plantilla plantilla)
         {
             try
             {
@@ -142,12 +143,26 @@ namespace Proyecto_Seminario.Controllers
                         await modelContext.Instanciasplantillas.AddAsync(newInstanciasplantilla);
                         await modelContext.SaveChangesAsync();
 
-                        foreach (PlantillasPasosDetalle item in plantilla.PlantillasPasosDetalle)
+                        foreach (Campo item in plantilla.Campos)
+                        {
+                            InstanciasplantillasDatosDetalle newInstanciasplantillasDatosDetalle = new InstanciasplantillasDatosDetalle();
+                            newInstanciasplantillasDatosDetalle.Instanciaplantilla = newInstanciasplantilla.IdInstanciaPlantilla;
+                            newInstanciasplantillasDatosDetalle.TipoDato = item.TipoDatoNavigation.IdTipoDato;
+                            newInstanciasplantillasDatosDetalle.NombreCampo = item.NombreCampo;
+
+                            await modelContext.InstanciasplantillasDatosDetalle.AddAsync(newInstanciasplantillasDatosDetalle);
+                            await modelContext.SaveChangesAsync();
+
+                            item.IdOrder = item.IdPlantillaCampo;
+                            item.IdPlantillaCampo = newInstanciasplantillasDatosDetalle.IdInstanciaPlantillaDato;
+                        }
+
+                        foreach (Paso item in plantilla.Pasos)
                         {
                             Pasosinstancias newPasoInstancia = new Pasosinstancias
                             {
-                                Nombre = item.PasoNavigation.Nombre,
-                                Descripcion = item.PasoNavigation.Descripcion,
+                                Nombre = item.Nombre,
+                                Descripcion = item.Nombre,
                             };
                             await modelContext.Pasosinstancias.AddAsync(newPasoInstancia);
                             await modelContext.SaveChangesAsync();
@@ -161,25 +176,39 @@ namespace Proyecto_Seminario.Controllers
                             await modelContext.InstanciasplantillasPasosDetalle.AddAsync(newInstanciasplantillasPasosDetalle);
                             await modelContext.SaveChangesAsync();
 
+                            foreach(Campo campo in item.Datos_Pasos)
+                            {
+                                PasosinstanciasDatosDetalle newPasosinstanciasDatosDetalle = new PasosinstanciasDatosDetalle
+                                {
+                                    InstanciaPlantillaDato = plantilla.Campos.Where(idDato => idDato.IdOrder == campo.IdPlantillaCampo).FirstOrDefault().IdPlantillaCampo,
+                                    Paso = newPasoInstancia.IdPasoinstancia,
+                                    SoloLectura = campo.SoloLectura
+                                };
+
+                                await modelContext.PasosinstanciasDatosDetalle.AddAsync(newPasosinstanciasDatosDetalle);
+                                await modelContext.SaveChangesAsync();
+                            }
+
+                            foreach (Usuario usuario in item.Usuarios)
+                            {
+                                PasosinstanciasUsuariosDetalle newPasosinstanciasUsuariosDetalle = new PasosinstanciasUsuariosDetalle();
+                                newPasosinstanciasUsuariosDetalle.PlantillaPasoDetalle = newInstanciasplantillasPasosDetalle.IdPlantillaPasoDetalle;
+                                newPasosinstanciasUsuariosDetalle.Usuario = usuario.IdUsuario;
+
+                                await modelContext.PasosinstanciasUsuariosDetalle.AddAsync(newPasosinstanciasUsuariosDetalle);
+                                await modelContext.SaveChangesAsync();
+                            }
+
                             newInstanciasplantillasPasosDetalle.PasoNavigation = newPasoInstancia;
                             newInstanciasplantilla.InstanciasplantillasPasosDetalle.Add(newInstanciasplantillasPasosDetalle);
                         }
 
-                        foreach (PlantillasCamposDetalle item in plantilla.PlantillasCamposDetalle)
-                        {
-                            InstanciasplantillasDatosDetalle newInstanciasplantillasDatosDetalle = new InstanciasplantillasDatosDetalle();
-                            newInstanciasplantillasDatosDetalle.Instanciaplantilla = newInstanciasplantilla.IdInstanciaPlantilla;
-                            newInstanciasplantillasDatosDetalle.TipoDato = item.TipoDatoNavigation.IdTipoDato;
-                            newInstanciasplantillasDatosDetalle.NombreCampo = item.NombreCampo;
-
-                            await modelContext.InstanciasplantillasDatosDetalle.AddAsync(newInstanciasplantillasDatosDetalle);
-                            await modelContext.SaveChangesAsync();
-                        }
+                        Debug.WriteLine(JsonConvert.SerializeObject(plantilla));
 
                         return Ok(new JsonMessage(
                             "success",
                             "22",
-                            newInstanciasplantilla,
+                            plantilla,
                             "Proceso agregado."
                         ));
                     }
@@ -228,7 +257,7 @@ namespace Proyecto_Seminario.Controllers
                         }
 
                         Debug.WriteLine(JsonConvert.SerializeObject( instanciaPlantilla));
-                        /*foreach(Dato dato in instanciaPlantilla.Datos)
+                        foreach(Dato dato in instanciaPlantilla.Datos)
                         {
                             InstanciasplantillasDatosDetalle toUpdate = modelContext.
                                 InstanciasplantillasDatosDetalle.
@@ -243,50 +272,81 @@ namespace Proyecto_Seminario.Controllers
                             await modelContext.SaveChangesAsync();
                         }
 
-                        foreach(InstanciaPaso paso in instanciaPlantilla.Pasos)
-                        {
-                            InstanciasplantillasPasosDetalle instanciasplantillasPasosDetalle =
-                                modelContext.InstanciasplantillasPasosDetalle.Where(pasoDetalle => pasoDetalle.IdPlantillaPasoDetalle == paso.IdPlantillaPasoDetalle).
-                                FirstOrDefault();
-                            instanciasplantillasPasosDetalle.FechaInicio = paso.Fecha_Inicio;
-                            instanciasplantillasPasosDetalle.FechaFin = paso.Fecha_Fin;
-
-                            modelContext.Entry(instanciasplantillasPasosDetalle).State =
-                                Microsoft.EntityFrameworkCore.EntityState.Modified;
-                            await modelContext.SaveChangesAsync();
-
-                            foreach(Dato dato in paso.Datos_Pasos)
-                            {
-                                PasosinstanciasDatosDetalle pasosinstanciasDatosDetalle = new PasosinstanciasDatosDetalle();
-                                pasosinstanciasDatosDetalle.InstanciaPlantillaDato = dato.IdInstanciaPlantillaDato;
-                                pasosinstanciasDatosDetalle.Paso = paso.IdPasoInstancia;
-                                pasosinstanciasDatosDetalle.SoloLectura = dato.SoloLectura == "true" ? "1" : "0";
-
-                                await modelContext.PasosinstanciasDatosDetalle.AddAsync(pasosinstanciasDatosDetalle);
-                                await modelContext.SaveChangesAsync();
-                            }
-
-                            foreach(Usuarios usuario in paso.Usuarios)
-                            {
-                                PasosUsuariosDetalle pasosUsuariosDetalle = new PasosUsuariosDetalle();
-                                pasosUsuariosDetalle.PlantillaPasoDetalle = paso.IdPlantillaPasoDetalle;
-                                pasosUsuariosDetalle.Usuario = usuario.IdUsuario;
-
-                                await modelContext.PasosUsuariosDetalle.AddAsync(pasosUsuariosDetalle);
-                                await modelContext.SaveChangesAsync();
-                            }
-
-                            Debug.WriteLine(JsonConvert.SerializeObject(paso));
-                        }
-
                         instanciaplantilla.Iniciada = "1";
                         modelContext.Entry(instanciaplantilla).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-                        await modelContext.SaveChangesAsync();*/
+                        await modelContext.SaveChangesAsync();
+
+                        var instanciaplantillaReady = modelContext.Instanciasplantillas.Where(proceso=>proceso.IdInstanciaPlantilla==instanciaPlantilla.IdInstanciaPlantilla).Select(item => new
+                        {
+                            item.IdInstanciaPlantilla,
+                            item.Nombre,
+                            item.Descripcion,
+                            item.Estado,
+                            item.Iniciada,
+                            UsuarioNavigation = new
+                            {
+                                item.UsuarioNavigation.IdUsuario,
+                                item.UsuarioNavigation.Nombres,
+                                item.UsuarioNavigation.Apellidos
+                            },
+                            Datos = item.InstanciasplantillasDatosDetalle.Select(campoDato => new
+                            {
+                                campoDato.IdInstanciaPlantillaDato,
+                                campoDato.Instanciaplantilla,
+                                campoDato.NombreCampo,
+                                campoDato.TipoDato,
+                                TipoDatoNavigation = new
+                                {
+                                    campoDato.TipoDatoNavigation.IdTipoDato,
+                                    campoDato.TipoDatoNavigation.Nombre
+                                },
+                                campoDato.DatoString,
+                                campoDato.DatoInteger,
+                                campoDato.DatoDate
+                            }).OrderBy(item2 => item2.IdInstanciaPlantillaDato),
+                            Pasos = item.InstanciasplantillasPasosDetalle.Select(paso => new
+                            {
+                                paso.PasoNavigation.IdPasoinstancia,
+                                paso.IdPlantillaPasoDetalle,
+                                paso.PasoNavigation.Nombre,
+                                paso.PasoNavigation.Descripcion,
+                                paso.FechaInicio,
+                                paso.FechaFin,
+                                UsuarioAccion = modelContext.Usuarios.Where(user => user.IdUsuario == paso.UsuarioAccion).Select(user => new
+                                {
+                                    user.IdUsuario,
+                                    user.Nombres,
+                                    user.Apellidos
+                                }).FirstOrDefault(),
+                                EstadoNavigation = modelContext.Acciones.Where(accion => accion.IdAccion == paso.Estado).Select(accion => new
+                                {
+                                    accion.IdAccion,
+                                    accion.Nombre
+                                }).FirstOrDefault(),
+                                Datos_Pasos = paso.PasoNavigation.PasosinstanciasDatosDetalle.Select(pasos_datos => new
+                                {
+                                    pasos_datos.InstanciaPlantillaDatoNavigation.IdInstanciaPlantillaDato,
+                                    pasos_datos.InstanciaPlantillaDatoNavigation.Instanciaplantilla,
+                                    pasos_datos.SoloLectura,
+                                    pasos_datos.InstanciaPlantillaDatoNavigation.NombreCampo,
+                                    pasos_datos.InstanciaPlantillaDatoNavigation.DatoString,
+                                    pasos_datos.InstanciaPlantillaDatoNavigation.DatoInteger,
+                                    pasos_datos.InstanciaPlantillaDatoNavigation.DatoDate,
+                                }),
+                                Usuarios = paso.PasosinstanciasUsuariosDetalle.Select(pasos_usuarios => new
+                                {
+                                    pasos_usuarios.IdPasosUsuarios,
+                                    pasos_usuarios.UsuarioNavigation.IdUsuario,
+                                    pasos_usuarios.UsuarioNavigation.Nombres,
+                                    pasos_usuarios.UsuarioNavigation.Apellidos
+                                })
+                            }).OrderBy(paso => paso.IdPasoinstancia)
+                        }).FirstOrDefault();
 
                         return Ok(new JsonMessage(
                         "success",
                         "23",
-                        instanciaplantilla,
+                        instanciaplantillaReady,
                         "Proceso iniciado."));
                     }
                     else
