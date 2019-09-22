@@ -108,11 +108,114 @@ namespace Proyecto_Seminario.Controllers
             
         }
 
+        [HttpGet("Details/{id}")]
+        public async Task<IActionResult> Details(decimal? id)
+        {
+            try
+            {
+                if (Request.Cookies["oauth_session_token"] != null && Request.Cookies["session_token"] != null)
+                {
+                    if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
+                    {
+                        var plantilla = modelContext.Plantillas.Select(item => new
+                        {
+                            item.IdPlantilla,
+                            item.Nombre,
+                            item.Descripcion,
+                            Campos = item.PlantillasCamposDetalle.Select(campo => new
+                            {
+                                campo.IdPlantillaCampo,
+                                campo.Plantilla,
+                                campo.NombreCampo,
+                                campo.TipoDato,
+                                TipoDatoNavigation = new
+                                {
+                                    campo.TipoDatoNavigation.IdTipoDato,
+                                    campo.TipoDatoNavigation.Nombre
+                                }
+                            }).OrderBy(item2 => item2.IdPlantillaCampo),
+                            Pasos = item.PlantillasPasosDetalle.Select(paso => new
+                            {
+                                paso.IdPlantillaPaso,
+                                paso.PasoNavigation.IdPaso,
+                                paso.Plantilla,
+                                paso.PasoNavigation.Nombre,
+                                paso.PasoNavigation.Descripcion,
+                                Datos_Pasos = paso.PasoNavigation.PasosDatosDetalle.Select(pasos_datos => new
+                                {
+                                    pasos_datos.IdPasoDato,
+                                    pasos_datos.PlantillaCampoNavigation.IdPlantillaCampo,
+                                    pasos_datos.PlantillaCampoNavigation.Plantilla,
+                                    pasos_datos.SoloLectura,
+                                    pasos_datos.PlantillaCampoNavigation.TipoDato,
+                                    TipoDatoNavigation = new
+                                    {
+                                        pasos_datos.PlantillaCampoNavigation.TipoDatoNavigation.IdTipoDato,
+                                        pasos_datos.PlantillaCampoNavigation.TipoDatoNavigation.Nombre
+                                    }
+                                }),
+                                Usuarios = paso.PasosUsuariosDetalle.Select(pasos_usuarios => new
+                                {
+                                    pasos_usuarios.IdPasoUsuario,
+                                    pasos_usuarios.UsuarioNavigation.IdUsuario,
+                                    pasos_usuarios.UsuarioNavigation.Nombres,
+                                    pasos_usuarios.UsuarioNavigation.Apellidos
+                                })
+                            })
+                        }).Where(hola => hola.IdPlantilla == id).FirstOrDefault();
+
+                        if (plantilla == null)
+                        {
+                            return NotFound(new JsonMessage(
+                             "fail",
+                             "10",
+                             null,
+                             "No se encontró la plantilla que está tratando de ver, puede ser que haya sido eliminada."));
+                        }
+
+                        Debug.WriteLine(JsonConvert.SerializeObject(plantilla));
+                        return Ok(new JsonMessage(
+                            "success",
+                            "11",
+                            plantilla,
+                            "Plantillas listas."));
+                    }
+                    else
+                    {
+                        TokenManager.removeCookies(Response);
+                        return NotFound(new JsonMessage(
+                         "fail",
+                         "0",
+                         null,
+                         "Acceso no autorizado."));
+                    }
+                }
+                else
+                {
+                    TokenManager.removeCookies(Response);
+                    return NotFound(new JsonMessage(
+                     "fail",
+                     "0",
+                     null,
+                     "Acceso no autorizado."));
+                }
+            }
+            catch(Exception exc)
+            {
+                return NotFound(new JsonMessage(
+                "fail",
+                "15",
+                null,
+                "Ha ocurrido un error. Contacte a soporte.Error: " + exc));
+            }
+        }
+
+
         [HttpPost("Create")]
         public async Task<IActionResult> Create([FromBody]Plantilla plantilla)
         {
-            /*try
-            {*/
+            try
+            {
                 if (Request.Cookies["oauth_session_token"] != null && Request.Cookies["session_token"] != null)
                 {
                     if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
@@ -222,7 +325,7 @@ namespace Proyecto_Seminario.Controllers
                      null,
                      "Acceso no autorizado."));
                 }
-            /*}
+            }
             catch(Exception exc)
             {
                 return NotFound(new JsonMessage(
@@ -230,7 +333,7 @@ namespace Proyecto_Seminario.Controllers
                 "15",
                 null,
                 "Ha ocurrido un error. Contacte a soporte.Error: " + exc));
-            }*/
+            }
             
         }
 
