@@ -22,7 +22,7 @@ namespace Proyecto_Seminario.Controllers
             {
                 if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
                 {
-                    var usuarios = modelContext.Usuarios.Where(usuario => usuario.IdUsuario.ToString() != TokenManager.getClaims(Request.Cookies["session_token"]).FindFirst("user_id").Value);
+                    var usuarios = modelContext.Usuarios;
 
                     return Ok(new JsonMessage(
                         "success",
