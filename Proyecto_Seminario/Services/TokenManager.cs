@@ -16,17 +16,18 @@ namespace Proyecto_Seminario.Services
         private static string Secret = "a1hYx1UKfKAYm6Lfdv4c2MJTusmuOclabGXpKflgommW5VCgV14k1abym2yONZD26hxozdZdANv4UyDodBipcxDxcs7kSYFz8r0wsXhEyCeNVFbFBBsWPDopdIuPoG7G";
 
 
-        public static string GenerateToken(string id_user,string user,string user_level)
+        public static string GenerateToken(Usuarios usuario)
         {
             byte[] key = Convert.FromBase64String(Secret);
             SymmetricSecurityKey securityKey = new SymmetricSecurityKey(key);
             SecurityTokenDescriptor descriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[] 
+                Subject = new ClaimsIdentity(new[]
                 {
-                    new Claim("user_id", id_user),
-                    new Claim("user_email", user),
-                    new Claim("user_level", user_level),
+                    new Claim("user_id", usuario.IdUsuario.ToString()),
+                    new Claim("user_name",usuario.Nombres+" "+usuario.Apellidos),
+                    new Claim("user_email", usuario.UsuarioEmail),
+                    new Claim("user_level", usuario.Rango.ToString()),
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(60),
                 SigningCredentials = new SigningCredentials(securityKey,

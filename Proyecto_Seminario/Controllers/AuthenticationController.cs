@@ -78,17 +78,12 @@ namespace Proyecto_Seminario.Controllers
             GoogleJsonWebSignature.Payload payload = await GoogleJsonWebSignature.ValidateAsync(token.IdToken);
                   
 
-            var usuario = db.Usuarios.Where(item => item.UsuarioEmail == payload.Email).Select(user => new
-            {
-                user.IdUsuario,
-                user.UsuarioEmail,
-                Rango = user.RangoNavigation.Nivel
-            }).FirstOrDefault();
+            Usuarios usuario = db.Usuarios.Where(item => item.UsuarioEmail == payload.Email).FirstOrDefault();
 
             if (usuario != null)
             {
                 Response.Cookies.Append("oauth_session_token", token.IdToken);
-                Response.Cookies.Append("session_token", TokenManager.GenerateToken(usuario.IdUsuario.ToString(),payload.Email, usuario.Rango.ToString()));
+                Response.Cookies.Append("session_token", TokenManager.GenerateToken(usuario));
 
                 return RedirectToAction("Index", "Home");
             }
