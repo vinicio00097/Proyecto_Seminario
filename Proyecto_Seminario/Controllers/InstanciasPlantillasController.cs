@@ -195,7 +195,7 @@ namespace Proyecto_Seminario.Controllers
                                 pasos_usuarios.UsuarioNavigation.Apellidos
                             })
                         }).OrderBy(paso => paso.IdPasoinstancia)
-                    });
+                    }).Where(process=>process.UsuarioNavigation.IdUsuario.ToString()!=Id_Usuario);
 
                     return Ok(new JsonMessage(
                         "success",
@@ -234,13 +234,26 @@ namespace Proyecto_Seminario.Controllers
                 {
                     if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
                     {
-                        var data = plantilla;
-                        Instanciasplantillas newInstanciasplantilla = new Instanciasplantillas();
-                        newInstanciasplantilla.Nombre = plantilla.Nombre;
-                        newInstanciasplantilla.Descripcion = plantilla.Descripcion;
-                        newInstanciasplantilla.Usuario = int.Parse(TokenManager.getClaims(Request.Cookies["session_token"]).FindFirst("user_id").Value);
-                        newInstanciasplantilla.Iniciada = "0";
-                        newInstanciasplantilla.Estado = "0";
+
+                        Plantillas verifyTemplate = modelContext.Plantillas.Where(plantillaVerify => plantillaVerify.IdPlantilla == plantilla.IdPlantilla).FirstOrDefault();
+
+                        if (verifyTemplate == null)
+                        {
+                            return NotFound(new JsonMessage(
+                            "fail",
+                            "20",
+                            null,
+                            "El proceso no se puede crear porque ha sido eliminada la plantilla."));
+                        }
+
+                        Instanciasplantillas newInstanciasplantilla = new Instanciasplantillas
+                        {
+                            Nombre = plantilla.Nombre,
+                            Descripcion = plantilla.Descripcion,
+                            Usuario = int.Parse(TokenManager.getClaims(Request.Cookies["session_token"]).FindFirst("user_id").Value),
+                            Iniciada = "0",
+                            Estado = "0"
+                        };
                         newInstanciasplantilla.UsuarioNavigation = modelContext.Usuarios.Where(user => user.IdUsuario == newInstanciasplantilla.Usuario).FirstOrDefault();
 
                         await modelContext.Instanciasplantillas.AddAsync(newInstanciasplantilla);
@@ -308,10 +321,40 @@ namespace Proyecto_Seminario.Controllers
 
                         Debug.WriteLine(JsonConvert.SerializeObject(plantilla));
 
+                        var startedInstanceTemplate = modelContext.Instanciasplantillas.Where(instanceTemplate => instanceTemplate.IdInstanciaPlantilla == newInstanciasplantilla.IdInstanciaPlantilla).Select(item => new
+                        {
+                            item.IdInstanciaPlantilla,
+                            item.Nombre,
+                            item.Descripcion,
+                            item.Estado,
+                            item.Iniciada,
+                            UsuarioNavigation = new
+                            {
+                                item.UsuarioNavigation.IdUsuario,
+                                item.UsuarioNavigation.Nombres,
+                                item.UsuarioNavigation.Apellidos
+                            },
+                            Datos = item.InstanciasplantillasDatosDetalle.Select(campoDato => new
+                            {
+                                campoDato.IdInstanciaPlantillaDato,
+                                campoDato.Instanciaplantilla,
+                                campoDato.NombreCampo,
+                                campoDato.TipoDato,
+                                TipoDatoNavigation = new
+                                {
+                                    campoDato.TipoDatoNavigation.IdTipoDato,
+                                    campoDato.TipoDatoNavigation.Nombre
+                                },
+                                campoDato.DatoString,
+                                campoDato.DatoInteger,
+                                campoDato.DatoDate
+                            }).OrderBy(item2 => item2.IdInstanciaPlantillaDato)
+                        }).FirstOrDefault();
+
                         return Ok(new JsonMessage(
                             "success",
                             "22",
-                            plantilla,
+                            startedInstanceTemplate,
                             "Proceso agregado."
                         ));
                     }
