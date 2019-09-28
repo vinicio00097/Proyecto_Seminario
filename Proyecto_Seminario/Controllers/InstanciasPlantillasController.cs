@@ -224,6 +224,128 @@ namespace Proyecto_Seminario.Controllers
             }
         }
 
+        [HttpGet("Details/{id}")]
+        public async Task<IActionResult> Details(decimal? id)
+        {
+            try
+            {
+                if (Request.Cookies["oauth_session_token"] != null && Request.Cookies["session_token"] != null)
+                {
+                    if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
+                    {
+                        var proceso = modelContext.Instanciasplantillas.Where(procesoItem => procesoItem.IdInstanciaPlantilla == id).Select(item => new
+                        {
+                            item.IdInstanciaPlantilla,
+                            item.Nombre,
+                            item.Descripcion,
+                            item.Estado,
+                            item.Iniciada,
+                            UsuarioNavigation = new
+                            {
+                                item.UsuarioNavigation.IdUsuario,
+                                item.UsuarioNavigation.Nombres,
+                                item.UsuarioNavigation.Apellidos
+                            },
+                            Datos = item.InstanciasplantillasDatosDetalle.Select(campoDato => new
+                            {
+                                campoDato.IdInstanciaPlantillaDato,
+                                campoDato.Instanciaplantilla,
+                                campoDato.NombreCampo,
+                                campoDato.TipoDato,
+                                TipoDatoNavigation = new
+                                {
+                                    campoDato.TipoDatoNavigation.IdTipoDato,
+                                    campoDato.TipoDatoNavigation.Nombre
+                                },
+                                campoDato.DatoString,
+                                campoDato.DatoInteger,
+                                campoDato.DatoDate
+                            }).OrderBy(item2 => item2.IdInstanciaPlantillaDato),
+                            Pasos = item.InstanciasplantillasPasosDetalle.Select(paso => new
+                            {
+                                paso.PasoNavigation.IdPasoinstancia,
+                                paso.IdPlantillaPasoDetalle,
+                                paso.PasoNavigation.Nombre,
+                                paso.PasoNavigation.Descripcion,
+                                paso.FechaInicio,
+                                paso.FechaFin,
+                                UsuarioAccion = modelContext.Usuarios.Where(user => user.IdUsuario == paso.UsuarioAccion).Select(user => new
+                                {
+                                    user.IdUsuario,
+                                    user.Nombres,
+                                    user.Apellidos
+                                }).FirstOrDefault(),
+                                EstadoNavigation = modelContext.Acciones.Where(accion => accion.IdAccion == paso.Estado).Select(accion => new
+                                {
+                                    accion.IdAccion,
+                                    accion.Nombre
+                                }).FirstOrDefault(),
+                                Datos_Pasos = paso.PasoNavigation.PasosinstanciasDatosDetalle.Select(pasos_datos => new
+                                {
+                                    pasos_datos.InstanciaPlantillaDatoNavigation.IdInstanciaPlantillaDato,
+                                    pasos_datos.InstanciaPlantillaDatoNavigation.Instanciaplantilla,
+                                    pasos_datos.SoloLectura,
+                                    pasos_datos.InstanciaPlantillaDatoNavigation.NombreCampo,
+                                    pasos_datos.InstanciaPlantillaDatoNavigation.DatoString,
+                                    pasos_datos.InstanciaPlantillaDatoNavigation.DatoInteger,
+                                    pasos_datos.InstanciaPlantillaDatoNavigation.DatoDate,
+                                }),
+                                Usuarios = paso.PasosinstanciasUsuariosDetalle.Select(pasos_usuarios => new
+                                {
+                                    pasos_usuarios.IdPasosUsuarios,
+                                    pasos_usuarios.UsuarioNavigation.IdUsuario,
+                                    pasos_usuarios.UsuarioNavigation.Nombres,
+                                    pasos_usuarios.UsuarioNavigation.Apellidos
+                                })
+                            }).OrderBy(paso => paso.IdPasoinstancia)
+                        }).FirstOrDefault();
+
+                        if (proceso == null)
+                        {
+                            return NotFound(new JsonMessage(
+                             "fail",
+                             "20",
+                             null,
+                             "No se encontró el proceso que está tratando de ver, puede ser que haya sido eliminada."));
+                        }
+
+                        Debug.WriteLine(JsonConvert.SerializeObject(proceso));
+                        return Ok(new JsonMessage(
+                            "success",
+                            "21",
+                            proceso,
+                            "Proceso listo."));
+                    }
+                    else
+                    {
+                        TokenManager.removeCookies(Response);
+                        return NotFound(new JsonMessage(
+                         "fail",
+                         "0",
+                         null,
+                         "Acceso no autorizado."));
+                    }
+                }
+                else
+                {
+                    TokenManager.removeCookies(Response);
+                    return NotFound(new JsonMessage(
+                     "fail",
+                     "0",
+                     null,
+                     "Acceso no autorizado."));
+                }
+            }
+            catch (Exception exc)
+            {
+                return NotFound(new JsonMessage(
+                "fail",
+                "25",
+                null,
+                "Ha ocurrido un error. Contacte a soporte.Error: " + exc));
+            }
+        }
+
         // POST: InstanciasPlantillas/Create
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Plantilla plantilla)
