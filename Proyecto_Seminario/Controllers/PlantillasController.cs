@@ -147,6 +147,7 @@ namespace Proyecto_Seminario.Controllers
                                     pasos_datos.IdPasoDato,
                                     pasos_datos.PlantillaCampoNavigation.IdPlantillaCampo,
                                     pasos_datos.PlantillaCampoNavigation.Plantilla,
+                                    pasos_datos.PlantillaCampoNavigation.NombreCampo,
                                     pasos_datos.SoloLectura,
                                     pasos_datos.PlantillaCampoNavigation.TipoDato,
                                     TipoDatoNavigation = new

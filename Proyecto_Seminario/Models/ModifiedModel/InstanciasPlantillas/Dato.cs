@@ -11,6 +11,8 @@ namespace Proyecto_Seminario.Models.ModifiedModel
         public int Instanciaplantilla { get; set; }
         public string SoloLectura { get; set; }
         public string NombreCampo { get; set; }
+        public string TipoDato { get; set; }
+        public TiposDatos TipoDatoNavigation { get; set; }
         public string DatoString { get; set; }
         public int? DatoInteger { get; set; }
         public DateTime? DatoDate { get; set; }

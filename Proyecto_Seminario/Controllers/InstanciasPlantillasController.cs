@@ -172,6 +172,7 @@ namespace Proyecto_Seminario.Controllers
                                 user.Nombres,
                                 user.Apellidos
                             }).FirstOrDefault(),
+                            paso.Estado,
                             EstadoNavigation = modelContext.Acciones.Where(accion => accion.IdAccion == paso.Estado).Select(accion => new
                             {
                                 accion.IdAccion,
@@ -275,6 +276,7 @@ namespace Proyecto_Seminario.Controllers
                                     user.Nombres,
                                     user.Apellidos
                                 }).FirstOrDefault(),
+                                paso.Estado,
                                 EstadoNavigation = modelContext.Acciones.Where(accion => accion.IdAccion == paso.Estado).Select(accion => new
                                 {
                                     accion.IdAccion,
@@ -306,7 +308,7 @@ namespace Proyecto_Seminario.Controllers
                              "fail",
                              "20",
                              null,
-                             "No se encontró el proceso que está tratando de ver, puede ser que haya sido eliminada."));
+                             "No se encontró el proceso que está tratando de ver, puede ser que haya sido eliminado."));
                         }
 
                         Debug.WriteLine(JsonConvert.SerializeObject(proceso));
