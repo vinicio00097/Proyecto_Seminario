@@ -60,7 +60,8 @@ namespace Proyecto_Seminario.Controllers
                     });*/
 
                     var tasks2 = modelContext.PasosinstanciasUsuariosDetalle.Where(item=>item.Usuario.ToString()==Id_Usuario&&
-                    item.PlantillaPasoDetalleNavigation.InstanciaPlantillaNavigation.Iniciada=="1").
+                    item.PlantillaPasoDetalleNavigation.InstanciaPlantillaNavigation.Iniciada=="1"&&
+                    item.PlantillaPasoDetalleNavigation.InstanciaPlantillaNavigation.Estado == "0").
                         Select(task => new
                     {
                             task.PlantillaPasoDetalleNavigation.IdPlantillaPasoDetalle,
@@ -109,7 +110,7 @@ namespace Proyecto_Seminario.Controllers
                             }),
                             task.PlantillaPasoDetalleNavigation.FechaInicio,
                             task.PlantillaPasoDetalleNavigation.FechaFin
-                        });
+                        }).OrderBy(task=>task.IdPlantillaPasoDetalle);
 
                     return Ok(new JsonMessage(
                         "success",
@@ -148,7 +149,11 @@ namespace Proyecto_Seminario.Controllers
                     if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
                     {
                         var verifyStep = modelContext.InstanciasplantillasPasosDetalle.
-                            Where(paso => paso.IdPlantillaPasoDetalle == id&&paso.UsuarioAccion==null).FirstOrDefault();
+                            Where(paso => paso.IdPlantillaPasoDetalle == id&&paso.UsuarioAccion==null&&
+                            (paso.Estado == null
+                            || (paso.EstadoNavigation.Nombre == "Regresar" || paso.EstadoNavigation.Nombre == "Regresado")
+                            || (paso.EstadoNavigation.Nombre == "Redireccionar" || paso.EstadoNavigation.Nombre == "Redireccionado"))&&
+                            paso.InstanciaPlantillaNavigation.Iniciada=="1"&&paso.InstanciaPlantillaNavigation.Estado=="0").FirstOrDefault();
 
                         if (verifyStep == null)
                         {
@@ -156,7 +161,7 @@ namespace Proyecto_Seminario.Controllers
                             "fail",
                             "40",
                             null,
-                            "No se pudo iniciar la tarea porque ya ha sido iniciada por otro participante de la tarea."));
+                            "No se pudo iniciar la tarea porque ya ha sido iniciada o el proceso de ésta se ha detenido"));
                         }
 
                         string Id_Usuario = TokenManager.getClaims(Request.Cookies["session_token"]).FindFirst("user_id").Value;
@@ -206,7 +211,7 @@ namespace Proyecto_Seminario.Controllers
                             "success",
                             "43",
                             instanciaPaso,
-                            "Usuario editado."));
+                            "Tarea iniciada."));
                     }
                     else
                     {
@@ -258,14 +263,18 @@ namespace Proyecto_Seminario.Controllers
         [HttpPut("Edit/Approve/{id}")]
         public async Task<ActionResult> Approve(int id, [FromBody] InstanciaPaso instanciaPaso)
         {
-            try
-            {
+            //try
+            //{
                 if (Request.Cookies["oauth_session_token"] != null && Request.Cookies["session_token"] != null)
                 {
                     if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
                     {
                         var verifyStep = modelContext.InstanciasplantillasPasosDetalle.
-                            Where(paso => paso.IdPlantillaPasoDetalle == id && paso.Estado == null).FirstOrDefault();
+                            Where(paso => paso.IdPlantillaPasoDetalle == id &&
+                            (paso.Estado == null
+                            || (paso.EstadoNavigation.Nombre == "Regresar" || paso.EstadoNavigation.Nombre == "Regresado")
+                            || (paso.EstadoNavigation.Nombre == "Redireccionar" || paso.EstadoNavigation.Nombre == "Redireccionado"))&&
+                            paso.InstanciaPlantillaNavigation.Iniciada == "1" && paso.InstanciaPlantillaNavigation.Estado == "0").FirstOrDefault();
 
                         if (verifyStep == null)
                         {
@@ -273,7 +282,7 @@ namespace Proyecto_Seminario.Controllers
                             "fail",
                             "40",
                             null,
-                            "No se pudo aprobar la tarea porque ya ha sido aprobada por otro participante de la tarea."));
+                            "No se pudo aprobar la tarea porque ya ha sido aprobada o el proceso de ésta se ha detenido."));
                         }
 
                         Debug.WriteLine(JsonConvert.SerializeObject(instanciaPaso));
@@ -317,7 +326,7 @@ namespace Proyecto_Seminario.Controllers
                             if (previosApprove.Estado == verifiedState.IdAccion)
                             {
                                 verifyStep.Estado = verifiedState.IdAccion;
-                                verifyStep.FechaFin = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time"));
+                                verifyStep.FechaFin = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("Central America Standard Time"));
 
                                 if (allSteps.Count()-1 == indexofTaskToApprove)
                                 {
@@ -352,7 +361,130 @@ namespace Proyecto_Seminario.Controllers
                             "success",
                             "43",
                             instanciaPaso,
-                            "Usuario editado."));
+                            "Tarea aprobada."));
+                    }
+                    else
+                    {
+                        TokenManager.removeCookies(Response);
+                        return NotFound(new JsonMessage(
+                         "fail",
+                         "0",
+                         null,
+                         "Acceso no autorizado."));
+                    }
+                }
+                else
+                {
+                    TokenManager.removeCookies(Response);
+                    return NotFound(new JsonMessage(
+                     "fail",
+                     "0",
+                     null,
+                     "Acceso no autorizado."));
+                }
+            /*}
+            catch (Exception exc)
+            {
+                return NotFound(new JsonMessage(
+                 "fail",
+                 "45",
+                 null,
+                 "Ha ocurrido un error. Contacte a soporte.Error: " + exc));
+            }*/
+        }
+
+        [HttpPut("Edit/Reject/{id}")]
+        public async Task<ActionResult> Reject(int id, [FromBody] InstanciaPaso instanciaPaso)
+        {
+            try
+            {
+                if (Request.Cookies["oauth_session_token"] != null && Request.Cookies["session_token"] != null)
+                {
+                    if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
+                    {
+                        var verifyStep = modelContext.InstanciasplantillasPasosDetalle.
+                            Where(paso => paso.IdPlantillaPasoDetalle == id && (paso.Estado == null
+                            ||(paso.EstadoNavigation.Nombre=="Regresar"|| paso.EstadoNavigation.Nombre == "Regresado")
+                            || (paso.EstadoNavigation.Nombre == "Redireccionar" || paso.EstadoNavigation.Nombre == "Redireccionado"))&&
+                            paso.InstanciaPlantillaNavigation.Iniciada == "1" && paso.InstanciaPlantillaNavigation.Estado == "0").FirstOrDefault();
+
+                        if (verifyStep == null)
+                        {
+                            return NotFound(new JsonMessage(
+                            "fail",
+                            "40",
+                            null,
+                            "No se pudo rechazar la tarea porque ya ha sido rechazada o el proceso de ésta se ha detenido."));
+                        }
+
+                        Debug.WriteLine(JsonConvert.SerializeObject(instanciaPaso));
+
+                        var allSteps = modelContext.InstanciasplantillasPasosDetalle.
+                            Where(step => step.InstanciaPlantilla == instanciaPaso.InstanciaPlantilla).
+                            OrderBy(step => step.IdPlantillaPasoDetalle).ToList();
+
+                        int indexofTaskToApprove = allSteps.ToList().FindIndex(hola => hola.IdPlantillaPasoDetalle == verifyStep.IdPlantillaPasoDetalle);
+
+                        if (indexofTaskToApprove == 0)
+                        {
+                            Acciones verifiedState = modelContext.Acciones.Where(accion => accion.Nombre == "Rechazar" || accion.Nombre == "Rechazado").FirstOrDefault();
+                            verifyStep.Estado = verifiedState.IdAccion;
+                            verifyStep.FechaFin = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("Central America Standard Time"));
+
+                            Instanciasplantillas proceso = modelContext.Instanciasplantillas.
+                                Where(procesoItem => procesoItem.IdInstanciaPlantilla == verifyStep.InstanciaPlantilla).FirstOrDefault();
+
+                            proceso.Estado = "1";
+
+                            modelContext.Entry(proceso).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                            await modelContext.SaveChangesAsync();
+
+                            modelContext.Entry(verifyStep).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                            await modelContext.SaveChangesAsync();
+
+                            instanciaPaso.Estado = verifiedState.IdAccion;
+                            instanciaPaso.EstadoNavigation = verifiedState;
+                        }
+                        else
+                        {
+                            InstanciasplantillasPasosDetalle previousApprove = allSteps.ElementAt(indexofTaskToApprove - 1);
+                            Acciones verifiedPreviousState = modelContext.Acciones.Where(accion => accion.Nombre == "Aprobar" || accion.Nombre == "Aprobado").FirstOrDefault();
+
+                            if (previousApprove.Estado == verifiedPreviousState.IdAccion)
+                            {
+                                Acciones rejectState = modelContext.Acciones.Where(accion => accion.Nombre == "Rechazar" || accion.Nombre == "Rechazado").FirstOrDefault();
+                                verifyStep.Estado = rejectState.IdAccion;
+                                verifyStep.FechaFin = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("Central America Standard Time"));
+
+                                Instanciasplantillas proceso = modelContext.Instanciasplantillas.
+                                    Where(procesoItem => procesoItem.IdInstanciaPlantilla == verifyStep.InstanciaPlantilla).FirstOrDefault();
+
+                                proceso.Estado = "1";
+
+                                modelContext.Entry(proceso).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                                await modelContext.SaveChangesAsync();
+
+                                modelContext.Entry(verifyStep).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                                await modelContext.SaveChangesAsync();
+
+                                instanciaPaso.Estado = rejectState.IdAccion;
+                                instanciaPaso.EstadoNavigation = rejectState;
+                            }
+                            else
+                            {
+                                return NotFound(new JsonMessage(
+                                "fail",
+                                "40",
+                                null,
+                                "No se pudo rechazar la tarea porque la tarea previa a esta no ha sido aprobada."));
+                            }
+                        }
+
+                        return Ok(new JsonMessage(
+                            "success",
+                            "43",
+                            instanciaPaso,
+                            "Tarea rechazada."));
                     }
                     else
                     {
@@ -384,6 +516,181 @@ namespace Proyecto_Seminario.Controllers
             }
         }
 
+        [HttpPut("Edit/Return/{id}")]
+        public async Task<ActionResult> Return(int id, [FromBody] InstanciaPaso instanciaPaso)
+        {
+            try
+            {
+                if (Request.Cookies["oauth_session_token"] != null && Request.Cookies["session_token"] != null)
+                {
+                    if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
+                    {
+                        var verifyStep = modelContext.InstanciasplantillasPasosDetalle.
+                            Where(paso => paso.IdPlantillaPasoDetalle == id && (paso.Estado == null
+                            || (paso.EstadoNavigation.Nombre == "Regresar" || paso.EstadoNavigation.Nombre == "Regresado")
+                            || (paso.EstadoNavigation.Nombre == "Redireccionar" || paso.EstadoNavigation.Nombre == "Redireccionado")) &&
+                            paso.InstanciaPlantillaNavigation.Iniciada == "1" && paso.InstanciaPlantillaNavigation.Estado == "0").FirstOrDefault();
+
+                        if (verifyStep == null)
+                        {
+                            return NotFound(new JsonMessage(
+                            "fail",
+                            "40",
+                            null,
+                            "No se pudo regresar la tarea porque ya ha sido regresada o el proceso de ésta se ha detenido."));
+                        }
+
+                        Debug.WriteLine(JsonConvert.SerializeObject(instanciaPaso));
+
+                        var allSteps = modelContext.InstanciasplantillasPasosDetalle.
+                            Where(step => step.InstanciaPlantilla == instanciaPaso.InstanciaPlantilla).
+                            OrderBy(step => step.IdPlantillaPasoDetalle).ToList();
+
+                        int indexofTaskToApprove = allSteps.ToList().FindIndex(hola => hola.IdPlantillaPasoDetalle == verifyStep.IdPlantillaPasoDetalle);
+
+                        if (indexofTaskToApprove != 0)
+                        {
+                            Acciones returnedState = modelContext.Acciones.Where(accion => accion.Nombre == "Regresar" || accion.Nombre == "Regresado").FirstOrDefault();
+                            verifyStep.Estado = returnedState.IdAccion;
+                            verifyStep.UsuarioAccion = null;
+
+                            modelContext.Entry(verifyStep).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                            await modelContext.SaveChangesAsync();
+
+                            InstanciasplantillasPasosDetalle previousApprove = allSteps.ElementAt(indexofTaskToApprove - 1);
+                            previousApprove.Estado = null;
+                            modelContext.Entry(previousApprove).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                            await modelContext.SaveChangesAsync();
+
+                            instanciaPaso.Estado = returnedState.IdAccion;
+                            instanciaPaso.EstadoNavigation = returnedState;
+                        }
+                        else
+                        {
+                            return NotFound(new JsonMessage(
+                                "fail",
+                                "40",
+                                null,
+                                "No se pudo retornar la tarea porque esta es la primer tarea del proceso."));
+                        }
+
+                        return Ok(new JsonMessage(
+                            "success",
+                            "43",
+                            instanciaPaso,
+                            "Tarea retornada."));
+                    }
+                    else
+                    {
+                        TokenManager.removeCookies(Response);
+                        return NotFound(new JsonMessage(
+                         "fail",
+                         "0",
+                         null,
+                         "Acceso no autorizado."));
+                    }
+                }
+                else
+                {
+                    TokenManager.removeCookies(Response);
+                    return NotFound(new JsonMessage(
+                     "fail",
+                     "0",
+                     null,
+                     "Acceso no autorizado."));
+                }
+            }
+            catch (Exception exc)
+            {
+                return NotFound(new JsonMessage(
+                 "fail",
+                 "45",
+                 null,
+                 "Ha ocurrido un error. Contacte a soporte.Error: " + exc));
+            }
+        }
+
+        [HttpPut("Edit/Redirect/{id}")]
+        public async Task<ActionResult> Redirect(int id, [FromBody] InstanciaPaso instanciaPaso)
+        {
+            try
+            {
+                if (Request.Cookies["oauth_session_token"] != null && Request.Cookies["session_token"] != null)
+                {
+                    if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
+                    {
+                        var verifyStep = modelContext.InstanciasplantillasPasosDetalle.
+                            Where(paso => paso.IdPlantillaPasoDetalle == id && (paso.Estado == null
+                            || (paso.EstadoNavigation.Nombre == "Regresar" || paso.EstadoNavigation.Nombre == "Regresado")
+                            || (paso.EstadoNavigation.Nombre == "Redireccionar" || paso.EstadoNavigation.Nombre == "Redireccionado")) &&
+                            paso.InstanciaPlantillaNavigation.Iniciada == "1" && paso.InstanciaPlantillaNavigation.Estado == "0").FirstOrDefault();
+
+                        if (verifyStep == null)
+                        {
+                            return NotFound(new JsonMessage(
+                            "fail",
+                            "40",
+                            null,
+                            "No se pudo redireccionar la tarea porque ya ha sido redireccionada o el proceso de ésta se ha detenido."));
+                        }
+
+                        Usuarios newUserStep = modelContext.Usuarios.Where(user => user.IdUsuario == instanciaPaso.UsuarioAccion).FirstOrDefault();
+                        Acciones redirectedState = modelContext.Acciones.Where(accion => accion.Nombre == "Redireccionar" || accion.Nombre == "Redireccionado").FirstOrDefault();
+
+                        if (newUserStep == null)
+                        {
+                            return NotFound(new JsonMessage(
+                            "fail",
+                            "40",
+                            null,
+                            "No se pudo redireccionar la tarea porque el usuario seleccionado no se ha encontrado."));
+                        }
+
+                        verifyStep.UsuarioAccion = newUserStep.IdUsuario;
+                        verifyStep.Estado = redirectedState.IdAccion;
+                        modelContext.Entry(verifyStep).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                        await modelContext.SaveChangesAsync();
+
+                        instanciaPaso.UsuarioAccion = newUserStep.IdUsuario;
+                        instanciaPaso.UsuarioAccionNavigation = newUserStep;
+                        instanciaPaso.Estado = redirectedState.IdAccion;
+                        instanciaPaso.EstadoNavigation = redirectedState;
+
+                        return Ok(new JsonMessage(
+                            "success",
+                            "43",
+                            instanciaPaso,
+                            "Tarea redireccionada."));
+                    }
+                    else
+                    {
+                        TokenManager.removeCookies(Response);
+                        return NotFound(new JsonMessage(
+                         "fail",
+                         "0",
+                         null,
+                         "Acceso no autorizado."));
+                    }
+                }
+                else
+                {
+                    TokenManager.removeCookies(Response);
+                    return NotFound(new JsonMessage(
+                     "fail",
+                     "0",
+                     null,
+                     "Acceso no autorizado."));
+                }
+            }
+            catch (Exception exc)
+            {
+                return NotFound(new JsonMessage(
+                 "fail",
+                 "45",
+                 null,
+                 "Ha ocurrido un error. Contacte a soporte.Error: " + exc));
+            }
+        }
         /*
         // GET: Tasks/Details/5
         public ActionResult Details(int id)

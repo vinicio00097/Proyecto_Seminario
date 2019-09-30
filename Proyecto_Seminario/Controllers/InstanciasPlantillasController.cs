@@ -69,6 +69,7 @@ namespace Proyecto_Seminario.Controllers
                                 user.Nombres,
                                 user.Apellidos
                             }).FirstOrDefault(),
+                            paso.Estado,
                             EstadoNavigation = modelContext.Acciones.Where(accion => accion.IdAccion == paso.Estado).Select(accion => new
                             {
                                 accion.IdAccion,
