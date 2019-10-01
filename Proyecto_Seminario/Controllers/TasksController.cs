@@ -25,40 +25,6 @@ namespace Proyecto_Seminario.Controllers
                 {
                     string Id_Usuario = TokenManager.getClaims(Request.Cookies["session_token"]).FindFirst("user_id").Value;
 
-                    /*var tasks = modelContext.InstanciasplantillasPasosDetalle.Select(task => new
-                    {
-                        task.IdPlantillaPasoDetalle,
-                        task.InstanciaPlantilla,
-                        paso = new
-                        {
-                            task.PasoNavigation.IdPasoinstancia,
-                            task.PasoNavigation.Nombre,
-                            task.PasoNavigation.Descripcion
-                        },
-                        estado = modelContext.Acciones.Where(accion => accion.IdAccion == task.Estado).
-                            Select(accion=>new
-                            {
-                                accion.IdAccion,
-                                accion.Nombre
-                            }).FirstOrDefault(),
-                        usuario_accion = 
-                            modelContext.Usuarios.Where(usuario => usuario.IdUsuario == task.UsuarioAccion).
-                            Select(usuario=>new
-                            {
-                                usuario.IdUsuario,
-                                usuario.Nombres,
-                                usuario.Apellidos
-                            }).FirstOrDefault(),
-                        participantes = task.PasosinstanciasUsuariosDetalle.Select(participante => new
-                        {
-                            participante.UsuarioNavigation.IdUsuario,
-                            participante.UsuarioNavigation.Nombres,
-                            participante.UsuarioNavigation.Apellidos,
-                        }),
-                        task.FechaInicio,
-                        task.FechaFin
-                    });*/
-
                     var tasks2 = modelContext.PasosinstanciasUsuariosDetalle.Where(item=>item.Usuario.ToString()==Id_Usuario&&
                     item.PlantillaPasoDetalleNavigation.InstanciaPlantillaNavigation.Iniciada=="1"&&
                     item.PlantillaPasoDetalleNavigation.InstanciaPlantillaNavigation.Estado == "0").

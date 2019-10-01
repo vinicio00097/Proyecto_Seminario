@@ -77,7 +77,7 @@ namespace Proyecto_Seminario.Controllers
                                 pasos_usuarios.UsuarioNavigation.Nombres,
                                 pasos_usuarios.UsuarioNavigation.Apellidos
                             })
-                        })
+                        }).OrderBy(paso=>paso.IdPlantillaPaso)
                     });
 
                     Debug.WriteLine(JsonConvert.SerializeObject(plantillas));
@@ -163,7 +163,7 @@ namespace Proyecto_Seminario.Controllers
                                     pasos_usuarios.UsuarioNavigation.Nombres,
                                     pasos_usuarios.UsuarioNavigation.Apellidos
                                 })
-                            })
+                            }).OrderBy(paso=>paso.IdPlantillaPaso)
                         }).Where(hola => hola.IdPlantilla == id).FirstOrDefault();
 
                         if (plantilla == null)
@@ -506,7 +506,7 @@ namespace Proyecto_Seminario.Controllers
                             pasos_usuarios.UsuarioNavigation.Nombres,
                             pasos_usuarios.UsuarioNavigation.Apellidos
                         })
-                    })
+                    }).OrderBy(paso => paso.IdPlantillaPaso)
                 }).Where(hola => hola.IdPlantilla == id).FirstOrDefault();
 
 

@@ -39,7 +39,7 @@ namespace Proyecto_Seminario.Controllers
         {
             TokenManager.removeCookies(Response);
 
-            return Ok();
+            return RedirectToAction("Index", "Authentication");
         }
 
     }
