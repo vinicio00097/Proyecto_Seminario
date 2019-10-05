@@ -281,8 +281,8 @@ namespace Proyecto_Seminario.Controllers
 
                                     PlantillaCampo = idPlantillaCampo,
                                     Paso = newPaso.IdPaso,
-                                    SoloLectura = dato.SoloLectura == "true" ? "1" : "0"
-                                };
+                                    SoloLectura = dato.SoloLectura == null || dato.SoloLectura == "0" ? "0" : "1"
+                            };
 
                                 await modelContext.PasosDatosDetalle.AddAsync(pasosDatosDetalle);
                                 await modelContext.SaveChangesAsync();

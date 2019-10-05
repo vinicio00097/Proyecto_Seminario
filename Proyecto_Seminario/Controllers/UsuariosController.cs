@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Proyecto_Seminario.Models;
 using Proyecto_Seminario.Services;
 
@@ -111,7 +112,7 @@ namespace Proyecto_Seminario.Controllers
                 {
                     if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
                     {
-                        Usuarios verifyUser = modelContext.Usuarios.Where(user => user.IdUsuario == id).FirstOrDefault();
+                        Usuarios verifyUser = await modelContext.Usuarios.FindAsync(usuario.IdUsuario);                        
 
                         if (verifyUser == null)
                         {
@@ -121,6 +122,7 @@ namespace Proyecto_Seminario.Controllers
                              null,
                              "No se actualizó porque el usuario ya ha sido eliminado."));
                         }
+                        modelContext.Entry(verifyUser).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
 
                         modelContext.Entry(usuario).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
                         await modelContext.SaveChangesAsync();
@@ -153,6 +155,7 @@ namespace Proyecto_Seminario.Controllers
             }
             catch(Exception exc)
             {
+                Debug.WriteLine(exc);
                 return NotFound(new JsonMessage(
                  "fail",
                  "35",
