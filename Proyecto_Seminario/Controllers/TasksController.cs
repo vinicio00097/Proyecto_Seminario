@@ -35,6 +35,7 @@ namespace Proyecto_Seminario.Controllers
                             task.PlantillaPasoDetalleNavigation.PasoNavigation.IdPasoinstancia,
                             task.PlantillaPasoDetalleNavigation.PasoNavigation.Nombre,
                             task.PlantillaPasoDetalleNavigation.PasoNavigation.Descripcion,
+                            task.PlantillaPasoDetalleNavigation.InstanciaPlantillaNavigation.FechaCreado,
                             Datos_Pasos =task.PlantillaPasoDetalleNavigation.PasoNavigation.PasosinstanciasDatosDetalle.Select(dato_paso=>new
                             {
                                 dato_paso.IdPasosinstanciasDatos,
@@ -108,8 +109,8 @@ namespace Proyecto_Seminario.Controllers
         [HttpPut("Edit/Start/{id}")]
         public async Task<ActionResult> Start(int id,[FromBody] InstanciaPaso instanciaPaso)
         {
-            //try
-            //{
+            try
+            {
                 if (Request.Cookies["oauth_session_token"] != null && Request.Cookies["session_token"] != null)
                 {
                     if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
@@ -198,7 +199,7 @@ namespace Proyecto_Seminario.Controllers
                      null,
                      "Acceso no autorizado."));
                 }
-            /*}
+            }
             catch (Exception exc)
             {
                 return NotFound(new JsonMessage(
@@ -206,7 +207,7 @@ namespace Proyecto_Seminario.Controllers
                  "45",
                  null,
                  "Ha ocurrido un error. Contacte a soporte.Error: " + exc));
-            }*/
+            }
         }
 
         private async Task overwriteDataFieldsAsync(List<Dato> datos)
@@ -229,8 +230,8 @@ namespace Proyecto_Seminario.Controllers
         [HttpPut("Edit/Approve/{id}")]
         public async Task<ActionResult> Approve(int id, [FromBody] InstanciaPaso instanciaPaso)
         {
-            //try
-            //{
+            try
+            {
                 if (Request.Cookies["oauth_session_token"] != null && Request.Cookies["session_token"] != null)
                 {
                     if (await TokenManager.ValidateGoogleToken(Request.Cookies["oauth_session_token"]) && TokenManager.ValidateToken(Request.Cookies["session_token"]))
@@ -348,7 +349,7 @@ namespace Proyecto_Seminario.Controllers
                      null,
                      "Acceso no autorizado."));
                 }
-            /*}
+            }
             catch (Exception exc)
             {
                 return NotFound(new JsonMessage(
@@ -356,7 +357,7 @@ namespace Proyecto_Seminario.Controllers
                  "45",
                  null,
                  "Ha ocurrido un error. Contacte a soporte.Error: " + exc));
-            }*/
+            }
         }
 
         [HttpPut("Edit/Reject/{id}")]
@@ -657,80 +658,5 @@ namespace Proyecto_Seminario.Controllers
                  "Ha ocurrido un error. Contacte a soporte.Error: " + exc));
             }
         }
-        /*
-        // GET: Tasks/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-
-        // GET: Tasks/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Tasks/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
-        {
-            try
-            {
-                // TODO: Add insert logic here
-
-                return RedirectToAction(nameof(IndexAsync));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: Tasks/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
-
-        // POST: Tasks/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
-        {
-            try
-            {
-                // TODO: Add update logic here
-
-                return RedirectToAction(nameof(IndexAsync));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: Tasks/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: Tasks/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                // TODO: Add delete logic here
-
-                return RedirectToAction(nameof(IndexAsync));
-            }
-            catch
-            {
-                return View();
-            }
-        }*/
     }
 }

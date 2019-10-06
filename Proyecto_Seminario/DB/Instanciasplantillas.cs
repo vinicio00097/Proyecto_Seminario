@@ -17,6 +17,8 @@ namespace Proyecto_Seminario
         public decimal IdInstanciaPlantilla { get; set; }
         public string Iniciada { get; set; }
         public string Descripcion { get; set; }
+        public DateTime? FechaCreado { get; set; }
+        public DateTime? FechaIniciado { get; set; }
 
         public virtual Usuarios UsuarioNavigation { get; set; }
         public virtual ICollection<InstanciasplantillasDatosDetalle> InstanciasplantillasDatosDetalle { get; set; }

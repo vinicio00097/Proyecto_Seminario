@@ -34,6 +34,8 @@ namespace Proyecto_Seminario.Controllers
                         item.Descripcion,
                         item.Estado,
                         item.Iniciada,
+                        item.FechaCreado,
+                        item.FechaIniciado,
                         UsuarioNavigation = new
                         {
                             item.UsuarioNavigation.IdUsuario,
@@ -138,6 +140,8 @@ namespace Proyecto_Seminario.Controllers
                         item.Descripcion,
                         item.Estado,
                         item.Iniciada,
+                        item.FechaCreado,
+                        item.FechaIniciado,
                         UsuarioNavigation = new
                         {
                             item.UsuarioNavigation.IdUsuario,
@@ -377,7 +381,8 @@ namespace Proyecto_Seminario.Controllers
                             Descripcion = plantilla.Descripcion,
                             Usuario = int.Parse(TokenManager.getClaims(Request.Cookies["session_token"]).FindFirst("user_id").Value),
                             Iniciada = "0",
-                            Estado = "0"
+                            Estado = "0",
+                            FechaCreado= TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("Central America Standard Time"))
                         };
                         newInstanciasplantilla.UsuarioNavigation = modelContext.Usuarios.Where(user => user.IdUsuario == newInstanciasplantilla.Usuario).FirstOrDefault();
 
@@ -453,6 +458,8 @@ namespace Proyecto_Seminario.Controllers
                             item.Descripcion,
                             item.Estado,
                             item.Iniciada,
+                            item.FechaCreado,
+                            item.FechaIniciado,
                             UsuarioNavigation = new
                             {
                                 item.UsuarioNavigation.IdUsuario,
@@ -544,6 +551,9 @@ namespace Proyecto_Seminario.Controllers
                         }
 
                         instanciaplantilla.Iniciada = "1";
+                        instanciaplantilla.FechaIniciado =
+                            TimeZoneInfo.
+                            ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("Central America Standard Time"));
                         modelContext.Entry(instanciaplantilla).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
                         await modelContext.SaveChangesAsync();
 
@@ -554,6 +564,8 @@ namespace Proyecto_Seminario.Controllers
                             item.Descripcion,
                             item.Estado,
                             item.Iniciada,
+                            item.FechaCreado,
+                            item.FechaIniciado,
                             UsuarioNavigation = new
                             {
                                 item.UsuarioNavigation.IdUsuario,
